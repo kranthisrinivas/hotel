@@ -1,5 +1,6 @@
 const form = document.getElementById("manageRoomsForm");
 
+// Submit form to add data to Airtable
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
 
@@ -20,7 +21,7 @@ form.addEventListener("submit", async (e) => {
       PhoneNumber: phoneNumber,
       PaymentMade: paymentMade,
       PaymentMethod: paymentMethod,
-      AmountPaid: amountPaid, // Should be a number
+      AmountPaid: amountPaid, // Must be a number
       Comments: comments
     }
   };
@@ -36,12 +37,11 @@ form.addEventListener("submit", async (e) => {
     });
 
     const result = await response.json();
-    console.log("Amount Paid Value:", amountPaid);
 
     if (response.ok) {
       alert("Room details added successfully!");
       form.reset();
-      fetchData();  // Fetch and display the updated data after form submission
+      loadRooms(); // Reload the data after submission
     } else {
       console.error("Airtable error:", result);
     }
@@ -50,42 +50,89 @@ form.addEventListener("submit", async (e) => {
   }
 });
 
-// Function to fetch and display data from Airtable
-async function fetchData() {
-  try {
-    const response = await fetch("https://api.airtable.com/v0/appY6ucd2CU1tr5AH/Rooms", {
-      headers: {
-        Authorization: "Bearer pat9VLsxcOkP4PdEy.6730536908ce848e0ccc8517889828b0e427bc3612eab0777e14899f0f61d04b",
-      },
-    });
+// Fetch data from Airtable and display in the table
+async function loadRooms() {
+  const response = await fetch("https://api.airtable.com/v0/appY6ucd2CU1tr5AH/Rooms", {
+    method: "GET",
+    headers: {
+      Authorization: "Bearer pat9VLsxcOkP4PdEy.6730536908ce848e0ccc8517889828b0e427bc3612eab0777e14899f0f61d04b",
+    },
+  });
+  
+  const data = await response.json();
 
-    const result = await response.json();
-    const roomsTableBody = document.querySelector("#roomsTable tbody");
+  const tableBody = document.querySelector("#roomsTable tbody");
+  tableBody.innerHTML = ""; // Clear existing rows
+
+  data.records.forEach((record) => {
+    const row = document.createElement("tr");
     
-    // Clear the current table body before appending new data
-    roomsTableBody.innerHTML = "";
+    row.innerHTML = `
+      <td>${record.fields.RoomNumber}</td>
+      <td>${record.fields.BedNumber}</td>
+      <td>${record.fields.TenantName}</td>
+      <td>${record.fields.PhoneNumber}</td>
+      <td>${record.fields.PaymentMade}</td>
+      <td>${record.fields.PaymentMethod}</td>
+      <td>${record.fields.AmountPaid}</td>
+      <td>${record.fields.Comments}</td>
+      <td class="action-btns">
+        <button class="edit-btn" onclick="editRoom('${record.id}')">Edit</button>
+        <button class="delete-btn" onclick="deleteRoom('${record.id}')">Delete</button>
+      </td>
+    `;
 
-    result.records.forEach(record => {
-      const row = document.createElement("tr");
-      
-      row.innerHTML = `
-        <td>${record.fields.RoomNumber}</td>
-        <td>${record.fields.BedNumber}</td>
-        <td>${record.fields.TenantName}</td>
-        <td>${record.fields.PhoneNumber}</td>
-        <td>${record.fields.PaymentMade}</td>
-        <td>${record.fields.PaymentMethod}</td>
-        <td>${record.fields.AmountPaid}</td>
-        <td>${record.fields.Comments}</td>
-      `;
+    tableBody.appendChild(row);
+  });
+}
 
-      roomsTableBody.appendChild(row);
-    });
+// Edit the room details in the form
+async function editRoom(recordId) {
+  const response = await fetch(`https://api.airtable.com/v0/appY6ucd2CU1tr5AH/Rooms/${recordId}`, {
+    method: "GET",
+    headers: {
+      Authorization: "Bearer pat9VLsxcOkP4PdEy.6730536908ce848e0ccc8517889828b0e427bc3612eab0777e14899f0f61d04b",
+    },
+  });
 
-  } catch (error) {
-    console.error("Error fetching data from Airtable:", error);
+  const data = await response.json();
+
+  const record = data.fields;
+  
+  form.roomNumber.value = record.RoomNumber;
+  form.bedNumber.value = record.BedNumber;
+  form.tenantName.value = record.TenantName;
+  form.phoneNumber.value = record.PhoneNumber;
+  form.paymentMade.value = record.PaymentMade;
+  form.paymentMethod.value = record.PaymentMethod;
+  form.amountPaid.value = record.AmountPaid;
+  form.comments.value = record.Comments;
+
+  // Add a hidden input field to hold the record ID for update
+  const hiddenInput = document.createElement("input");
+  hiddenInput.type = "hidden";
+  hiddenInput.name = "recordId";
+  hiddenInput.value = recordId;
+  form.appendChild(hiddenInput);
+}
+
+// Delete a room from Airtable
+async function deleteRoom(recordId) {
+  const response = await fetch(`https://api.airtable.com/v0/appY6ucd2CU1tr5AH/Rooms/${recordId}`, {
+    method: "DELETE",
+    headers: {
+      Authorization: "Bearer pat9VLsxcOkP4PdEy.6730536908ce848e0ccc8517889828b0e427bc3612eab0777e14899f0f61d04b",
+    },
+  });
+
+  const result = await response.json();
+  if (response.ok) {
+    alert("Room deleted successfully!");
+    loadRooms(); // Reload the data after deletion
+  } else {
+    console.error("Error deleting room:", result);
   }
 }
 
-// Fetch data when the page loads
-fetchData();
+// Initial load of room data when the page loads
+loadRooms();
