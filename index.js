@@ -9,7 +9,7 @@ form.addEventListener("submit", async (e) => {
   const phoneNumber = form.phoneNumber.value;
   const paymentMade = form.paymentMade.value;
   const paymentMethod = form.paymentMethod.value;
-  const amountPaid = parseFloat(form.amountPaid.value);
+  const amountPaid = parseFloat(form.amountPaid.value); // Convert to number
   const comments = form.comments.value;
 
   const data = {
@@ -20,7 +20,7 @@ form.addEventListener("submit", async (e) => {
       PhoneNumber: phoneNumber,
       PaymentMade: paymentMade,
       PaymentMethod: paymentMethod,
-      AmountPaid: amountPaid,
+      AmountPaid: amountPaid, // Should be a number
       Comments: comments
     }
   };
@@ -41,7 +41,7 @@ form.addEventListener("submit", async (e) => {
     if (response.ok) {
       alert("Room details added successfully!");
       form.reset();
-      fetchRoomsFromAirtable(); // 👈 Refresh table after submission
+      fetchData();  // Fetch and display the updated data after form submission
     } else {
       console.error("Airtable error:", result);
     }
@@ -50,55 +50,42 @@ form.addEventListener("submit", async (e) => {
   }
 });
 
-
-// ✅ 1. Fetch data from Airtable
-const fetchRoomsFromAirtable = async () => {
-  const airtableApiKey = "Bearer pat9VLsxcOkP4PdEy.6730536908ce848e0ccc8517889828b0e427bc3612eab0777e14899f0f61d04b";
-  const baseId = "appY6ucd2CU1tr5AH";
-  const tableName = "Rooms";
-
+// Function to fetch and display data from Airtable
+async function fetchData() {
   try {
-    const response = await fetch(`https://api.airtable.com/v0/${baseId}/${tableName}`, {
+    const response = await fetch("https://api.airtable.com/v0/appY6ucd2CU1tr5AH/Rooms", {
       headers: {
-        Authorization: airtableApiKey,
+        Authorization: "Bearer pat9VLsxcOkP4PdEy.6730536908ce848e0ccc8517889828b0e427bc3612eab0777e14899f0f61d04b",
       },
     });
 
-    const data = await response.json();
+    const result = await response.json();
+    const roomsTableBody = document.querySelector("#roomsTable tbody");
+    
+    // Clear the current table body before appending new data
+    roomsTableBody.innerHTML = "";
 
-    if (data.records) {
-      populateTable(data.records);
-    } else {
-      console.error("No records found");
-    }
+    result.records.forEach(record => {
+      const row = document.createElement("tr");
+      
+      row.innerHTML = `
+        <td>${record.fields.RoomNumber}</td>
+        <td>${record.fields.BedNumber}</td>
+        <td>${record.fields.TenantName}</td>
+        <td>${record.fields.PhoneNumber}</td>
+        <td>${record.fields.PaymentMade}</td>
+        <td>${record.fields.PaymentMethod}</td>
+        <td>${record.fields.AmountPaid}</td>
+        <td>${record.fields.Comments}</td>
+      `;
+
+      roomsTableBody.appendChild(row);
+    });
+
   } catch (error) {
-    console.error("Error fetching data:", error);
+    console.error("Error fetching data from Airtable:", error);
   }
-};
+}
 
-// ✅ 2. Populate HTML table with records
-const populateTable = (records) => {
-  const tbody = document.querySelector("#roomsTable tbody");
-  tbody.innerHTML = "";
-
-  records.forEach((record) => {
-    const fields = record.fields;
-    const row = document.createElement("tr");
-    row.innerHTML = `
-      <td>${fields.RoomNumber || ""}</td>
-      <td>${fields.BedNumber || ""}</td>
-      <td>${fields.TenantName || ""}</td>
-      <td>${fields.PhoneNumber || ""}</td>
-      <td>${fields.PaymentMade || ""}</td>
-      <td>${fields.PaymentMethod || ""}</td>
-      <td>${fields.AmountPaid || ""}</td>
-      <td>${fields.Comments || ""}</td>
-    `;
-    tbody.appendChild(row);
-  });
-};
-
-// ✅ 3. Fetch data when the page loads
-document.addEventListener("DOMContentLoaded", () => {
-  fetchRoomsFromAirtable();
-});
+// Fetch data when the page loads
+fetchData();
