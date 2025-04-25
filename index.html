@@ -151,24 +151,26 @@
 
     <h2>Manage Rooms</h2>
     <form id="manageRoomsForm">
-      <input type="text" name="roomNumber" placeholder="Room Number" required />
-      <input type="text" name="bedNumber" placeholder="Bed Number" required />
-      <input type="text" name="tenantName" placeholder="Tenant Name" required />
-      <input type="text" name="phoneNumber" placeholder="Phone Number" required />
-      <select name="paymentMade" required>
-        <option value="">Payment Made?</option>
-        <option value="Yes">Yes</option>
-        <option value="No">No</option>
-      </select>
-      <select name="paymentMethod">
-        <option value="">Payment Method</option>
-        <option value="Cash">Cash</option>
-        <option value="UPI">UPI</option>
-        <option value="Card">Card</option>
-      </select>
-      <input type="number" name="amountPaid" placeholder="Amount Paid" required />
-      <textarea name="comments" placeholder="Comments"></textarea>
-      <button type="submit">Submit</button>
+  <input type="text" name="roomNumber" placeholder="Room Number" required />
+  <input type="text" name="bedNumber" placeholder="Bed Number" required />
+  <input type="text" name="tenantName" placeholder="Tenant Name" required />
+  <input type="text" name="phoneNumber" placeholder="Phone Number" required />
+  <select name="paymentMade" required>
+    <option value="">Payment Made?</option>
+    <option value="Yes">Yes</option>
+    <option value="No">No</option>
+  </select>
+  <select name="paymentMethod">
+    <option value="">Payment Method</option>
+    <option value="Cash">Cash</option>
+    <option value="UPI">UPI</option>
+    <option value="Card">Card</option>
+  </select>
+  <input type="number" name="amountPaid" placeholder="Amount Paid" required />
+  <textarea name="comments" placeholder="Comments"></textarea>
+  <button type="submit">Submit</button>
+</form>
+
     </form>
 
     <table id="roomsTable">
