@@ -3,504 +3,144 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PG Hostel Admin Dashboard</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-100 text-gray-900">
-
-  <div class="min-h-screen flex">
-
-    <!-- Sidebar -->
-    <aside class="w-64 bg-white shadow-md p-4">
-      <h1 class="text-2xl font-bold mb-6">PG Admin</h1>
-      <nav class="space-y-4">
-        <a href="#dashboard" class="block px-3 py-2 hover:bg-gray-200 rounded">Dashboard</a>
-        <a href="#rooms" class="block px-3 py-2 hover:bg-gray-200 rounded">Manage Rooms</a>
-        <a href="#tenants" class="block px-3 py-2 hover:bg-gray-200 rounded">Tenants</a>
-        <a href="#bookings" class="block px-3 py-2 hover:bg-gray-200 rounded">Bookings</a>
-        <a href="#payments" class="block px-3 py-2 hover:bg-gray-200 rounded">Payments</a>
-        <a href="#complaints" class="block px-3 py-2 hover:bg-gray-200 rounded">Complaints</a>
-      </nav>
-    </aside>
-
-    <!-- Main Content -->
-    <main class="flex-1 p-6">
-      <!-- Dashboard Section -->
-      <section id="dashboard">
-        <h2 class="text-xl font-semibold mb-4">Dashboard Overview</h2>
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div class="bg-white p-4 rounded shadow">Total Rooms: <strong>10</strong></div>
-          <div class="bg-white p-4 rounded shadow">Total Beds: <strong>30</strong></div>
-          <div class="bg-white p-4 rounded shadow">Occupied Beds: <strong>18</strong></div>
-          <div class="bg-white p-4 rounded shadow">Monthly Revenue: <strong>₹54,000</strong></div>
-        </div>
-      </section>
-
-      <!-- Placeholder sections for other modules -->
-      <section id="rooms" class="mt-10">
-  <h2 class="text-xl font-semibold mb-4">Manage Rooms</h2>
-
-  <!-- Add New Room Form -->
-<form class="grid grid-cols-1 md:grid-cols-2 gap-4" id="addRoomForm">
-  <div>
-    <label class="block mb-1 font-medium">Room Number</label>
-    <input type="text" class="w-full border p-2 rounded" placeholder="E.g. 101" id="roomNumber" />
-  </div>
-  <div>
-    <label class="block mb-1 font-medium">Type</label>
-    <input type="text" class="w-full border p-2 rounded" placeholder="E.g. Single/Double" id="roomType" />
-  </div>
-  <div>
-    <label class="block mb-1 font-medium">Status</label>
-    <input type="text" class="w-full border p-2 rounded" placeholder="E.g. Available/Occupied" id="roomStatus" />
-  </div>
-  <div>
-    <label class="block mb-1 font-medium">Price per Night</label>
-    <input type="number" class="w-full border p-2 rounded" placeholder="E.g. 1500" id="pricePerNight" />
-  </div>
-  <div>
-    <label class="block mb-1 font-medium">Amenities</label>
-    <input type="text" class="w-full border p-2 rounded" placeholder="E.g. Wi-Fi, AC" id="amenities" />
-  </div>
-  <div>
-    <label class="block mb-1 font-medium">Last Cleaned</label>
-    <input type="date" class="w-full border p-2 rounded" id="lastCleaned" />
-  </div>
-  <div class="flex items-end">
-    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Add Room</button>
-  </div>
-</form>
-
-
-  <!-- Room Table -->
-  <div class="bg-white p-4 rounded shadow">
-    <table class="min-w-full">
-      <thead class="bg-gray-200">
-        <tr>
-          <th class="py-2 px-4 text-left">Room No</th>
-          <th class="py-2 px-4 text-left">Beds</th>
-          <th class="py-2 px-4 text-left">Occupied</th>
-          <th class="py-2 px-4 text-left">Available</th>
-          <th class="py-2 px-4 text-left">Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr class="border-b">
-          <td class="py-2 px-4">101</td>
-          <td class="py-2 px-4">3</td>
-          <td class="py-2 px-4 text-red-600">2</td>
-          <td class="py-2 px-4 text-green-600">1</td>
-          <td class="py-2 px-4 space-x-2">
-            <button class="text-blue-600 hover:underline">Edit</button>
-            <button class="text-red-600 hover:underline">Delete</button>
-          </td>
-        </tr>
-        <tr class="border-b">
-          <td class="py-2 px-4">102</td>
-          <td class="py-2 px-4">2</td>
-          <td class="py-2 px-4 text-red-600">1</td>
-          <td class="py-2 px-4 text-green-600">1</td>
-          <td class="py-2 px-4 space-x-2">
-            <button class="text-blue-600 hover:underline">Edit</button>
-            <button class="text-red-600 hover:underline">Delete</button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-</section>
-
-      //////////////////
-
-     <section id="tenants" class="mt-10">
-  <h2 class="text-xl font-semibold mb-4">Tenants</h2>
-
-  <!-- Add New Tenant Form -->
-  <div class="bg-white p-4 rounded shadow mb-6">
-    <h3 class="text-lg font-medium mb-2">Add New Tenant</h3>
-    <form class="grid grid-cols-1 md:grid-cols-5 gap-4">
-      <div>
-        <label class="block mb-1 font-medium">Name</label>
-        <input type="text" class="w-full border p-2 rounded" placeholder="Tenant Name" />
-      </div>
-      <div>
-        <label class="block mb-1 font-medium">Phone</label>
-        <input type="text" class="w-full border p-2 rounded" placeholder="10-digit number" />
-      </div>
-      <div>
-        <label class="block mb-1 font-medium">Room No</label>
-        <input type="text" class="w-full border p-2 rounded" placeholder="E.g. 101" />
-      </div>
-      <div>
-        <label class="block mb-1 font-medium">Bed No</label>
-        <input type="text" class="w-full border p-2 rounded" placeholder="E.g. 1" />
-      </div>
-      <div>
-        <label class="block mb-1 font-medium">ID Proof</label>
-        <input type="text" class="w-full border p-2 rounded" placeholder="Aadhar/Passport" />
-      </div>
-      <div class="md:col-span-5 flex justify-end">
-        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 mt-2">Add Tenant</button>
-      </div>
-    </form>
-  </div>
-
-  <!-- Tenant Table -->
-  <div class="bg-white p-4 rounded shadow">
-    <table class="min-w-full">
-      <thead class="bg-gray-200">
-        <tr>
-          <th class="py-2 px-4 text-left">Name</th>
-          <th class="py-2 px-4 text-left">Phone</th>
-          <th class="py-2 px-4 text-left">Room</th>
-          <th class="py-2 px-4 text-left">Bed</th>
-          <th class="py-2 px-4 text-left">ID Proof</th>
-          <th class="py-2 px-4 text-left">Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr class="border-b">
-          <td class="py-2 px-4">Rahul Sharma</td>
-          <td class="py-2 px-4">9876543210</td>
-          <td class="py-2 px-4">101</td>
-          <td class="py-2 px-4">1</td>
-          <td class="py-2 px-4">Aadhar: ****1234</td>
-          <td class="py-2 px-4 space-x-2">
-            <button class="text-blue-600 hover:underline">Edit</button>
-            <button class="text-red-600 hover:underline">Delete</button>
-          </td>
-        </tr>
-        <tr class="border-b">
-          <td class="py-2 px-4">Neha Patel</td>
-          <td class="py-2 px-4">9123456789</td>
-          <td class="py-2 px-4">102</td>
-          <td class="py-2 px-4">2</td>
-          <td class="py-2 px-4">Passport: **X123</td>
-          <td class="py-2 px-4 space-x-2">
-            <button class="text-blue-600 hover:underline">Edit</button>
-            <button class="text-red-600 hover:underline">Delete</button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-</section>
-/////////////////////////////////
-
-      <section id="bookings" class="mt-10">
-  <h2 class="text-xl font-semibold mb-4">Bookings</h2>
-
-  <!-- Add Booking Form -->
-  <div class="bg-white p-4 rounded shadow mb-6">
-    <h3 class="text-lg font-medium mb-2">Add New Booking</h3>
-    <form class="grid grid-cols-1 md:grid-cols-5 gap-4">
-      <div>
-        <label class="block mb-1 font-medium">Tenant Name</label>
-        <input type="text" class="w-full border p-2 rounded" placeholder="E.g. Rahul Sharma" />
-      </div>
-      <div>
-        <label class="block mb-1 font-medium">Room No</label>
-        <input type="text" class="w-full border p-2 rounded" placeholder="E.g. 101" />
-      </div>
-      <div>
-        <label class="block mb-1 font-medium">Bed No</label>
-        <input type="text" class="w-full border p-2 rounded" placeholder="E.g. 1" />
-      </div>
-      <div>
-        <label class="block mb-1 font-medium">Check-in</label>
-        <input type="date" class="w-full border p-2 rounded" />
-      </div>
-      <div>
-        <label class="block mb-1 font-medium">Check-out</label>
-        <input type="date" class="w-full border p-2 rounded" />
-      </div>
-      <div class="md:col-span-5 flex justify-end">
-        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 mt-2">Add Booking</button>
-      </div>
-    </form>
-  </div>
-
-  <!-- Booking Table -->
-  <div class="bg-white p-4 rounded shadow">
-    <table class="min-w-full">
-      <thead class="bg-gray-200">
-        <tr>
-          <th class="py-2 px-4 text-left">Tenant</th>
-          <th class="py-2 px-4 text-left">Room</th>
-          <th class="py-2 px-4 text-left">Bed</th>
-          <th class="py-2 px-4 text-left">Check-in</th>
-          <th class="py-2 px-4 text-left">Check-out</th>
-          <th class="py-2 px-4 text-left">Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr class="border-b">
-          <td class="py-2 px-4">Rahul Sharma</td>
-          <td class="py-2 px-4">101</td>
-          <td class="py-2 px-4">1</td>
-          <td class="py-2 px-4">2025-04-01</td>
-          <td class="py-2 px-4">2025-04-30</td>
-          <td class="py-2 px-4 space-x-2">
-            <button class="text-blue-600 hover:underline">Edit</button>
-            <button class="text-red-600 hover:underline">Delete</button>
-          </td>
-        </tr>
-        <tr class="border-b">
-          <td class="py-2 px-4">Neha Patel</td>
-          <td class="py-2 px-4">102</td>
-          <td class="py-2 px-4">2</td>
-          <td class="py-2 px-4">2025-03-15</td>
-          <td class="py-2 px-4">2025-04-15</td>
-          <td class="py-2 px-4 space-x-2">
-            <button class="text-blue-600 hover:underline">Edit</button>
-            <button class="text-red-600 hover:underline">Delete</button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-</section>
-////////////////////////////////////////////
-
-     <section id="payments" class="mt-10">
-  <h2 class="text-xl font-semibold mb-4">Payments</h2>
-
-  <!-- Add Payment Form -->
-  <div class="bg-white p-4 rounded shadow mb-6">
-    <h3 class="text-lg font-medium mb-2">Add New Payment</h3>
-    <form class="grid grid-cols-1 md:grid-cols-4 gap-4">
-      <div>
-        <label class="block mb-1 font-medium">Tenant Name</label>
-        <input type="text" class="w-full border p-2 rounded" placeholder="E.g. Rahul Sharma" />
-      </div>
-      <div>
-        <label class="block mb-1 font-medium">Amount</label>
-        <input type="number" class="w-full border p-2 rounded" placeholder="₹ Amount" />
-      </div>
-      <div>
-        <label class="block mb-1 font-medium">Date</label>
-        <input type="date" class="w-full border p-2 rounded" />
-      </div>
-      <div>
-        <label class="block mb-1 font-medium">Payment Method</label>
-        <select class="w-full border p-2 rounded">
-          <option>Cash</option>
-          <option>UPI</option>
-          <option>Card</option>
-          <option>Bank Transfer</option>
-        </select>
-      </div>
-      <div class="md:col-span-4">
-        <label class="block mb-1 font-medium">Notes (Optional)</label>
-        <input type="text" class="w-full border p-2 rounded" placeholder="E.g. April rent" />
-      </div>
-      <div class="md:col-span-4 flex justify-end">
-        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 mt-2">Add Payment</button>
-      </div>
-    </form>
-  </div>
-
-  <!-- Payment Table -->
-  <div class="bg-white p-4 rounded shadow">
-    <table class="min-w-full">
-      <thead class="bg-gray-200">
-        <tr>
-          <th class="py-2 px-4 text-left">Tenant</th>
-          <th class="py-2 px-4 text-left">Amount</th>
-          <th class="py-2 px-4 text-left">Date</th>
-          <th class="py-2 px-4 text-left">Method</th>
-          <th class="py-2 px-4 text-left">Notes</th>
-          <th class="py-2 px-4 text-left">Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr class="border-b">
-          <td class="py-2 px-4">Rahul Sharma</td>
-          <td class="py-2 px-4">₹5000</td>
-          <td class="py-2 px-4">2025-04-05</td>
-          <td class="py-2 px-4">UPI</td>
-          <td class="py-2 px-4">April Rent</td>
-          <td class="py-2 px-4 space-x-2">
-            <button class="text-blue-600 hover:underline">Edit</button>
-            <button class="text-red-600 hover:underline">Delete</button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-</section>
-//////////////////////////////////////////////////
-
-      <section id="complaints" class="mt-10">
-  <h2 class="text-xl font-semibold mb-4">Complaints</h2>
-
-  <!-- Complaints Table -->
-  <div class="bg-white p-4 rounded shadow">
-    <table class="min-w-full">
-      <thead class="bg-gray-200">
-        <tr>
-          <th class="py-2 px-4 text-left">Tenant</th>
-          <th class="py-2 px-4 text-left">Room</th>
-          <th class="py-2 px-4 text-left">Date</th>
-          <th class="py-2 px-4 text-left">Complaint</th>
-          <th class="py-2 px-4 text-left">Status</th>
-          <th class="py-2 px-4 text-left">Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr class="border-b">
-          <td class="py-2 px-4">Neha Patel</td>
-          <td class="py-2 px-4">102</td>
-          <td class="py-2 px-4">2025-04-23</td>
-          <td class="py-2 px-4">Water leakage in bathroom</td>
-          <td class="py-2 px-4 text-yellow-600">Pending</td>
-          <td class="py-2 px-4 space-x-2">
-            <button class="text-green-600 hover:underline">Mark Resolved</button>
-            <button class="text-red-600 hover:underline">Delete</button>
-          </td>
-        </tr>
-        <tr class="border-b">
-          <td class="py-2 px-4">Ravi Kumar</td>
-          <td class="py-2 px-4">201</td>
-          <td class="py-2 px-4">2025-04-21</td>
-          <td class="py-2 px-4">Fan not working</td>
-          <td class="py-2 px-4 text-green-600">Resolved</td>
-          <td class="py-2 px-4 space-x-2">
-            <button class="text-gray-400 cursor-not-allowed" disabled>Resolved</button>
-            <button class="text-red-600 hover:underline">Delete</button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-</section>
-
-    </main>
-  </div>
-  <script>
-    const apiKey = 'patBX1XOCRvCLzvax.1b8ea03e81a1ab60a59b1f7365cb36bd3ce66cd6c7bd71233c5e0b692ec9d534';  // Replace with your actual API key
-const baseId = 'appY6ucd2CU1tr5AH';  // Replace with your actual Base ID
-const roomsTableUrl = `https://api.airtable.com/v0/${baseId}/PGmanagement`;  // Replace with the table name if different
-
-// Fetch and display rooms
-function fetchRooms() {
-  fetch(roomsTableUrl, {
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-    },
-  })
-    .then((response) => response.json())
-    .then((data) => {
-      const tableBody = document.querySelector("#roomsTable tbody");
-      tableBody.innerHTML = ""; // Clear existing rows
-
-      data.records.forEach((record) => {
-        const row = document.createElement("tr");
-        row.innerHTML = `
-          <td>${record.fields['Room Number']}</td>
-          <td>${record.fields['Type']}</td>
-          <td>${record.fields['Status']}</td>
-          <td>${record.fields['Price per Night']}</td>
-          <td>${record.fields['Amenities']}</td>
-          <td>${record.fields['Last cleaned']}</td>
-          <td>
-            <button class="text-blue-600 hover:underline" onclick="editRoom('${record.id}')">Edit</button>
-            <button class="text-red-600 hover:underline" onclick="deleteRoom('${record.id}')">Delete</button>
-          </td>
-        `;
-        tableBody.appendChild(row);
-      });
-    })
-    .catch((error) => console.error('Error fetching rooms:', error));
-}
-
-// Add new room
-document.getElementById('addRoomForm').addEventListener('submit', function (event) {
-  event.preventDefault();
-
-  const roomData = {
-    fields: {
-      'Room Number': document.getElementById('roomNumber').value,
-      'Type': document.getElementById('roomType').value,
-      'Status': document.getElementById('roomStatus').value,
-      'Price per Night': document.getElementById('pricePerNight').value,
-      'Amenities': document.getElementById('amenities').value,
-      'Last cleaned': document.getElementById('lastCleaned').value,
+  <title>PG Hostel Admin</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f3f4f6;
+      margin: 0;
+      padding: 0;
     }
-  };
+    .container {
+      max-width: 1000px;
+      margin: 20px auto;
+      padding: 20px;
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    h1, h2 {
+      text-align: center;
+      color: #333;
+    }
+    .stats {
+      display: flex;
+      justify-content: space-around;
+      margin-bottom: 20px;
+    }
+    .stat-box {
+      background-color: #e5e7eb;
+      padding: 15px;
+      border-radius: 8px;
+      width: 22%;
+      text-align: center;
+    }
+    form {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+    }
+    form input, form select, form textarea {
+      width: 100%;
+      padding: 10px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    form button {
+      grid-column: span 2;
+      padding: 10px;
+      background-color: #4f46e5;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 30px;
+    }
+    table, th, td {
+      border: 1px solid #ccc;
+    }
+    th, td {
+      padding: 10px;
+      text-align: left;
+    }
+    .action-btns button {
+      margin-right: 5px;
+      padding: 5px 10px;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+    }
+    .edit-btn { background-color: #f59e0b; color: white; }
+    .delete-btn { background-color: #ef4444; color: white; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>PG Hostel Admin Panel</h1>
 
-  fetch(roomsTableUrl, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(roomData),
-  })
-    .then((response) => response.json())
-    .then(() => {
-      fetchRooms();  // Refresh the rooms table
-      alert('Room added successfully!');
-    })
-    .catch((error) => console.error('Error adding room:', error));
-});
+    <div class="stats">
+      <div class="stat-box">
+        <h3>Total Rooms</h3>
+        <p id="totalRooms">0</p>
+      </div>
+      <div class="stat-box">
+        <h3>Total Beds</h3>
+        <p id="totalBeds">0</p>
+      </div>
+      <div class="stat-box">
+        <h3>Occupied Beds</h3>
+        <p id="occupiedBeds">0</p>
+      </div>
+      <div class="stat-box">
+        <h3>Revenue</h3>
+        <p id="revenue">₹0</p>
+      </div>
+    </div>
 
-// Delete a room
-function deleteRoom(roomId) {
-  fetch(`${roomsTableUrl}/${roomId}`, {
-    method: 'DELETE',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-    },
-  })
-    .then(() => fetchRooms())  // Refresh the room data
-    .catch((error) => console.error('Error deleting room:', error));
-}
+    <h2>Manage Rooms</h2>
+    <form id="manageRoomsForm">
+      <input type="text" name="roomNumber" placeholder="Room Number" required />
+      <input type="text" name="bedNumber" placeholder="Bed Number" required />
+      <input type="text" name="tenantName" placeholder="Tenant Name" required />
+      <input type="text" name="phoneNumber" placeholder="Phone Number" required />
+      <select name="paymentMade" required>
+        <option value="">Payment Made?</option>
+        <option value="Yes">Yes</option>
+        <option value="No">No</option>
+      </select>
+      <select name="paymentMethod">
+        <option value="">Payment Method</option>
+        <option value="Cash">Cash</option>
+        <option value="UPI">UPI</option>
+        <option value="Card">Card</option>
+      </select>
+      <textarea name="comments" placeholder="Comments"></textarea>
+      <button type="submit">Submit</button>
+    </form>
 
-// Edit a room (simplified)
-function editRoom(roomId) {
-  const newRoomNumber = prompt('Enter new room number:');
-  const newRoomType = prompt('Enter new room type:');
+    <table id="roomsTable">
+      <thead>
+        <tr>
+          <th>Room</th>
+          <th>Bed</th>
+          <th>Tenant</th>
+          <th>Phone</th>
+          <th>Paid</th>
+          <th>Method</th>
+          <th>Comments</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Dynamic rows -->
+      </tbody>
+    </table>
+  </div>
 
-  fetch(`${roomsTableUrl}/${roomId}`, {
-    method: 'PATCH',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      fields: {
-        'Room Number': newRoomNumber,
-        'Type': newRoomType,
-      },
-    }),
-  })
-    .then(() => fetchRooms())  // Refresh the rooms table
-    .catch((error) => console.error('Error editing room:', error));
-}
-
-// Fetch rooms when the page loads
-window.onload = fetchRooms;
-
-const url = `https://api.airtable.com/v0/${baseId}/${tableName}`;
-
-fetch(url, {
-  method: 'GET',
-  headers: {
-    'Authorization': `Bearer ${apiKey}`,
-    'Content-Type': 'application/json'
-  }
-})
-.then(response => response.json())
-.then(data => {
-  console.log('Data:', data);
-})
-.catch(error => {
-  console.error('Error:', error);
-});
-
-  </script>
-
-
+  <script src="admin.js"></script>
 </body>
 </html>
