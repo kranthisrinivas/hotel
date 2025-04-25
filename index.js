@@ -1,12 +1,8 @@
-const form = document.getElementById('manageRoomsForm');
-const roomsTableUrl = `https://api.airtable.com/v0/{appY6ucd2CU1tr5AH}/Rooms`; // Replace with your actual base ID
-const apiKey = 'YOUR_AIRTABLE_API_KEY'; // Replace with your Airtable API key
+document.getElementById("manageRoomsForm").addEventListener("submit", function (event) {
+  event.preventDefault(); // Prevent the form from submitting normally
 
-form.addEventListener('submit', async (event) => {
-  event.preventDefault(); // Prevent default form submission
-
-  const formData = new FormData(form);
-
+  // Get the values from the form
+  const formData = new FormData(event.target);
   const roomNumber = formData.get('roomNumber');
   const bedNumber = formData.get('bedNumber');
   const tenantName = formData.get('tenantName');
@@ -16,100 +12,38 @@ form.addEventListener('submit', async (event) => {
   const amountPaid = formData.get('amountPaid');
   const comments = formData.get('comments');
 
+  // Prepare data to send to Airtable
   const data = {
     fields: {
-      'Room Number': roomNumber,
-      'Bed Number': bedNumber,
-      'Tenant Name': tenantName,
-      'Phone Number': phoneNumber,
-      'Payment Made': paymentMade,
-      'Payment Method': paymentMethod,
-      'Amount Paid': amountPaid,
-      'Comments': comments,
-    },
+      RoomNumber: roomNumber,
+      BedNumber: bedNumber,
+      TenantName: tenantName,
+      PhoneNumber: phoneNumber,
+      PaymentMade: paymentMade,
+      PaymentMethod: paymentMethod,
+      AmountPaid: amountPaid,
+      Comments: comments
+    }
   };
 
-  try {
-    const response = await fetch(roomsTableUrl, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    });
-
-    const result = await response.json();
-    if (response.ok) {
-      alert('Room added successfully!');
-      displayRooms();
-      form.reset(); // Reset the form
-    } else {
-      console.error('Error adding room:', result);
-      alert('Failed to add room');
-    }
-  } catch (error) {
-    console.error('Error:', error);
-    alert('Error adding room');
-  }
-});
-
-// Fetch and display rooms data from Airtable
-async function displayRooms() {
-  const response = await fetch(roomsTableUrl, {
+  // Send data to Airtable using Fetch API
+  fetch("https://api.airtable.com/v0/appY6ucd2CU1tr5AH/Rooms", {
+    method: "POST",
     headers: {
-      Authorization: `Bearer ${apiKey}`,
+      "Authorization": "Bearer pat9VLsxcOkP4PdEy.6730536908ce848e0ccc8517889828b0e427bc3612eab0777e14899f0f61d04b",
+      "Content-Type": "application/json"
     },
+    body: JSON.stringify(data)
+  })
+  .then(response => response.json())
+  .then(data => {
+    console.log("Data successfully submitted to Airtable:", data);
+    alert("Room details added successfully!");
+    // Optionally, reset the form after submission
+    document.getElementById("manageRoomsForm").reset();
+  })
+  .catch(error => {
+    console.error("Error submitting data:", error);
+    alert("Failed to submit room details.");
   });
-  const result = await response.json();
-  const roomsTable = document.getElementById('roomsTable').getElementsByTagName('tbody')[0];
-  roomsTable.innerHTML = ''; // Clear existing rows
-
-  result.records.forEach(record => {
-    const row = roomsTable.insertRow();
-    row.innerHTML = `
-      <td>${record.fields['Room Number']}</td>
-      <td>${record.fields['Bed Number']}</td>
-      <td>${record.fields['Tenant Name']}</td>
-      <td>${record.fields['Phone Number']}</td>
-      <td>${record.fields['Payment Made']}</td>
-      <td>${record.fields['Payment Method']}</td>
-      <td>${record.fields['Amount Paid']}</td>
-      <td>${record.fields['Comments']}</td>
-      <td class="action-btns">
-        <button class="edit-btn">Edit</button>
-        <button class="delete-btn" onclick="deleteRoom('${record.id}')">Delete</button>
-      </td>
-    `;
-  });
-}
-
-// Delete room from Airtable
-async function deleteRoom(recordId) {
-  const confirmation = confirm('Are you sure you want to delete this room?');
-  if (!confirmation) return;
-
-  try {
-    const response = await fetch(`${roomsTableUrl}/${recordId}`, {
-      method: 'DELETE',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-      },
-    });
-
-    if (response.ok) {
-      alert('Room deleted successfully!');
-      displayRooms();
-    } else {
-      const result = await response.json();
-      console.error('Error deleting room:', result);
-      alert('Failed to delete room');
-    }
-  } catch (error) {
-    console.error('Error:', error);
-    alert('Error deleting room');
-  }
-}
-
-// Initial call to display rooms when page loads
-displayRooms();
+});
