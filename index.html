@@ -377,6 +377,129 @@
 
     </main>
   </div>
+  <script>
+    const apiKey = 'patBX1XOCRvCLzvax.1b8ea03e81a1ab60a59b1f7365cb36bd3ce66cd6c7bd71233c5e0b692ec9d534';  // Replace with your actual API key
+const baseId = 'appY6ucd2CU1tr5AH';  // Replace with your actual Base ID
+const roomsTableUrl = `https://api.airtable.com/v0/${baseId}/PGmanagement`;  // Replace with the table name if different
+
+// Fetch and display rooms
+function fetchRooms() {
+  fetch(roomsTableUrl, {
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+    },
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      const tableBody = document.querySelector("#roomsTable tbody");
+      tableBody.innerHTML = ""; // Clear existing rows
+
+      data.records.forEach((record) => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${record.fields['Room Number']}</td>
+          <td>${record.fields['Type']}</td>
+          <td>${record.fields['Status']}</td>
+          <td>${record.fields['Price per Night']}</td>
+          <td>${record.fields['Amenities']}</td>
+          <td>${record.fields['Last cleaned']}</td>
+          <td>
+            <button class="text-blue-600 hover:underline" onclick="editRoom('${record.id}')">Edit</button>
+            <button class="text-red-600 hover:underline" onclick="deleteRoom('${record.id}')">Delete</button>
+          </td>
+        `;
+        tableBody.appendChild(row);
+      });
+    })
+    .catch((error) => console.error('Error fetching rooms:', error));
+}
+
+// Add new room
+document.getElementById('addRoomForm').addEventListener('submit', function (event) {
+  event.preventDefault();
+
+  const roomData = {
+    fields: {
+      'Room Number': document.getElementById('roomNumber').value,
+      'Type': document.getElementById('roomType').value,
+      'Status': document.getElementById('roomStatus').value,
+      'Price per Night': document.getElementById('pricePerNight').value,
+      'Amenities': document.getElementById('amenities').value,
+      'Last cleaned': document.getElementById('lastCleaned').value,
+    }
+  };
+
+  fetch(roomsTableUrl, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(roomData),
+  })
+    .then((response) => response.json())
+    .then(() => {
+      fetchRooms();  // Refresh the rooms table
+      alert('Room added successfully!');
+    })
+    .catch((error) => console.error('Error adding room:', error));
+});
+
+// Delete a room
+function deleteRoom(roomId) {
+  fetch(`${roomsTableUrl}/${roomId}`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+    },
+  })
+    .then(() => fetchRooms())  // Refresh the room data
+    .catch((error) => console.error('Error deleting room:', error));
+}
+
+// Edit a room (simplified)
+function editRoom(roomId) {
+  const newRoomNumber = prompt('Enter new room number:');
+  const newRoomType = prompt('Enter new room type:');
+
+  fetch(`${roomsTableUrl}/${roomId}`, {
+    method: 'PATCH',
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      fields: {
+        'Room Number': newRoomNumber,
+        'Type': newRoomType,
+      },
+    }),
+  })
+    .then(() => fetchRooms())  // Refresh the rooms table
+    .catch((error) => console.error('Error editing room:', error));
+}
+
+// Fetch rooms when the page loads
+window.onload = fetchRooms;
+
+const url = `https://api.airtable.com/v0/${baseId}/${tableName}`;
+
+fetch(url, {
+  method: 'GET',
+  headers: {
+    'Authorization': `Bearer ${apiKey}`,
+    'Content-Type': 'application/json'
+  }
+})
+.then(response => response.json())
+.then(data => {
+  console.log('Data:', data);
+})
+.catch(error => {
+  console.error('Error:', error);
+});
+
+  </script>
 
 
 </body>
