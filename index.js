@@ -36,7 +36,8 @@ form.addEventListener("submit", async (e) => {
     });
 
     const result = await response.json();
-    console.log("Data successfully submitted to Airtable:", result);
+    console.log("Amount Paid Value:", amountPaid);
+
 
     if (response.ok) {
       alert("Room details added successfully!");
