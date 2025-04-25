@@ -3,113 +3,66 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Hotel Admin Dashboard</title>
+  <title>PG Hostel Admin Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 text-gray-900">
+
   <div class="min-h-screen flex">
+
     <!-- Sidebar -->
     <aside class="w-64 bg-white shadow-md p-4">
-      <h1 class="text-2xl font-bold mb-6">Admin Panel</h1>
+      <h1 class="text-2xl font-bold mb-6">PG Admin</h1>
       <nav class="space-y-4">
-        <a href="#dashboard" class="block px-2 py-1 hover:bg-gray-200 rounded">Dashboard</a>
-        <a href="#rooms" class="block px-2 py-1 hover:bg-gray-200 rounded">Manage Rooms</a>
-        <a href="#bookings" class="block px-2 py-1 hover:bg-gray-200 rounded">Bookings</a>
-        <a href="#payments" class="block px-2 py-1 hover:bg-gray-200 rounded">Payments</a>
+        <a href="#dashboard" class="block px-3 py-2 hover:bg-gray-200 rounded">Dashboard</a>
+        <a href="#rooms" class="block px-3 py-2 hover:bg-gray-200 rounded">Manage Rooms</a>
+        <a href="#tenants" class="block px-3 py-2 hover:bg-gray-200 rounded">Tenants</a>
+        <a href="#bookings" class="block px-3 py-2 hover:bg-gray-200 rounded">Bookings</a>
+        <a href="#payments" class="block px-3 py-2 hover:bg-gray-200 rounded">Payments</a>
+        <a href="#complaints" class="block px-3 py-2 hover:bg-gray-200 rounded">Complaints</a>
       </nav>
     </aside>
 
     <!-- Main Content -->
     <main class="flex-1 p-6">
-      <!-- Dashboard -->
-      <section id="dashboard" class="mb-8">
+      <!-- Dashboard Section -->
+      <section id="dashboard">
         <h2 class="text-xl font-semibold mb-4">Dashboard Overview</h2>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div class="bg-white p-4 rounded shadow">Total Rooms: <strong>20</strong></div>
-          <div class="bg-white p-4 rounded shadow">Booked Rooms: <strong>12</strong></div>
-          <div class="bg-white p-4 rounded shadow">Total Revenue: <strong>$4,200</strong></div>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div class="bg-white p-4 rounded shadow">Total Rooms: <strong>10</strong></div>
+          <div class="bg-white p-4 rounded shadow">Total Beds: <strong>30</strong></div>
+          <div class="bg-white p-4 rounded shadow">Occupied Beds: <strong>18</strong></div>
+          <div class="bg-white p-4 rounded shadow">Monthly Revenue: <strong>₹54,000</strong></div>
         </div>
       </section>
 
-      <!-- Manage Rooms -->
-      <section id="rooms" class="mb-8">
+      <!-- Placeholder sections for other modules -->
+      <section id="rooms" class="mt-10">
         <h2 class="text-xl font-semibold mb-4">Manage Rooms</h2>
-        <table class="min-w-full bg-white shadow rounded">
-          <thead class="bg-gray-200">
-            <tr>
-              <th class="py-2 px-4 text-left">Room Number</th>
-              <th class="py-2 px-4 text-left">Type</th>
-              <th class="py-2 px-4 text-left">Status</th>
-              <th class="py-2 px-4 text-left">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr class="border-b">
-              <td class="py-2 px-4">101</td>
-              <td class="py-2 px-4">Deluxe</td>
-              <td class="py-2 px-4 text-green-600">Available</td>
-              <td class="py-2 px-4">
-                <button class="text-blue-600">Edit</button>
-              </td>
-            </tr>
-            <tr>
-              <td class="py-2 px-4">102</td>
-              <td class="py-2 px-4">Suite</td>
-              <td class="py-2 px-4 text-red-600">Booked</td>
-              <td class="py-2 px-4">
-                <button class="text-blue-600">Edit</button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <p class="text-gray-600">Room management interface will go here.</p>
       </section>
 
-      <!-- Bookings -->
-      <section id="bookings" class="mb-8">
+      <section id="tenants" class="mt-10">
+        <h2 class="text-xl font-semibold mb-4">Tenants</h2>
+        <p class="text-gray-600">Tenant management will go here.</p>
+      </section>
+
+      <section id="bookings" class="mt-10">
         <h2 class="text-xl font-semibold mb-4">Bookings</h2>
-        <table class="min-w-full bg-white shadow rounded">
-          <thead class="bg-gray-200">
-            <tr>
-              <th class="py-2 px-4 text-left">Guest</th>
-              <th class="py-2 px-4 text-left">Room</th>
-              <th class="py-2 px-4 text-left">Check-in</th>
-              <th class="py-2 px-4 text-left">Check-out</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td class="py-2 px-4">John Doe</td>
-              <td class="py-2 px-4">102</td>
-              <td class="py-2 px-4">2025-04-20</td>
-              <td class="py-2 px-4">2025-04-25</td>
-            </tr>
-          </tbody>
-        </table>
+        <p class="text-gray-600">Booking system will go here.</p>
       </section>
 
-      <!-- Payments -->
-      <section id="payments">
+      <section id="payments" class="mt-10">
         <h2 class="text-xl font-semibold mb-4">Payments</h2>
-        <table class="min-w-full bg-white shadow rounded">
-          <thead class="bg-gray-200">
-            <tr>
-              <th class="py-2 px-4 text-left">Guest</th>
-              <th class="py-2 px-4 text-left">Amount</th>
-              <th class="py-2 px-4 text-left">Date</th>
-              <th class="py-2 px-4 text-left">Method</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td class="py-2 px-4">John Doe</td>
-              <td class="py-2 px-4">$500</td>
-              <td class="py-2 px-4">2025-04-20</td>
-              <td class="py-2 px-4">Credit Card</td>
-            </tr>
-          </tbody>
-        </table>
+        <p class="text-gray-600">Payment tracking system will go here.</p>
+      </section>
+
+      <section id="complaints" class="mt-10">
+        <h2 class="text-xl font-semibold mb-4">Complaints</h2>
+        <p class="text-gray-600">Complaint list will go here.</p>
       </section>
     </main>
   </div>
+
 </body>
 </html>
