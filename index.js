@@ -1,6 +1,6 @@
 const form = document.getElementById("manageRoomsForm");
 
-// Submit form to add data to Airtable
+// Submit form to add or update data in Airtable
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
 
@@ -26,27 +26,57 @@ form.addEventListener("submit", async (e) => {
     }
   };
 
-  try {
-    const response = await fetch("https://api.airtable.com/v0/appY6ucd2CU1tr5AH/Rooms", {
-      method: "POST",
-      headers: {
-        Authorization: "Bearer pat9VLsxcOkP4PdEy.6730536908ce848e0ccc8517889828b0e427bc3612eab0777e14899f0f61d04b",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-    });
+  // Check if the form has a hidden input for the recordId (for editing an existing record)
+  const recordId = form.querySelector("input[name='recordId']")?.value;
 
-    const result = await response.json();
+  if (recordId) {
+    // If recordId exists, update the record using PATCH request
+    try {
+      const response = await fetch(`https://api.airtable.com/v0/appY6ucd2CU1tr5AH/Rooms/${recordId}`, {
+        method: "PATCH",
+        headers: {
+          Authorization: "Bearer pat9VLsxcOkP4PdEy.6730536908ce848e0ccc8517889828b0e427bc3612eab0777e14899f0f61d04b",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
 
-    if (response.ok) {
-      alert("Room details added successfully!");
-      form.reset();
-      loadRooms(); // Reload the data after submission
-    } else {
-      console.error("Airtable error:", result);
+      const result = await response.json();
+
+      if (response.ok) {
+        alert("Room details updated successfully!");
+        form.reset();
+        loadRooms(); // Reload the data after update
+      } else {
+        console.error("Airtable error:", result);
+      }
+    } catch (error) {
+      console.error("Error updating data:", error);
     }
-  } catch (error) {
-    console.error("Error submitting data:", error);
+  } else {
+    // If no recordId, create a new record using POST request
+    try {
+      const response = await fetch("https://api.airtable.com/v0/appY6ucd2CU1tr5AH/Rooms", {
+        method: "POST",
+        headers: {
+          Authorization: "Bearer pat9VLsxcOkP4PdEy.6730536908ce848e0ccc8517889828b0e427bc3612eab0777e14899f0f61d04b",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        alert("Room details added successfully!");
+        form.reset();
+        loadRooms(); // Reload the data after submission
+      } else {
+        console.error("Airtable error:", result);
+      }
+    } catch (error) {
+      console.error("Error submitting data:", error);
+    }
   }
 });
 
@@ -58,7 +88,7 @@ async function loadRooms() {
       Authorization: "Bearer pat9VLsxcOkP4PdEy.6730536908ce848e0ccc8517889828b0e427bc3612eab0777e14899f0f61d04b",
     },
   });
-  
+
   const data = await response.json();
 
   const tableBody = document.querySelector("#roomsTable tbody");
@@ -66,7 +96,7 @@ async function loadRooms() {
 
   data.records.forEach((record) => {
     const row = document.createElement("tr");
-    
+
     row.innerHTML = `
       <td>${record.fields.RoomNumber}</td>
       <td>${record.fields.BedNumber}</td>
@@ -98,7 +128,7 @@ async function editRoom(recordId) {
   const data = await response.json();
 
   const record = data.fields;
-  
+
   form.roomNumber.value = record.RoomNumber;
   form.bedNumber.value = record.BedNumber;
   form.tenantName.value = record.TenantName;
