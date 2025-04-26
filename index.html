@@ -10,6 +10,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>PG Hostel Admin</title>
   <style>
+    /* Same CSS you wrote — no change needed */
     :root {
       --primary: #4f46e5;
       --light-gray: #f9fafb;
@@ -41,6 +42,7 @@
       justify-content: space-between;
       gap: 20px;
       margin-bottom: 30px;
+      flex-wrap: wrap;
     }
     .stat-box {
       flex: 1;
@@ -50,6 +52,7 @@
       border-radius: 10px;
       text-align: center;
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      min-width: 200px;
     }
     form {
       display: grid;
@@ -123,6 +126,14 @@
       font-weight: bold;
       margin-top: 10px;
     }
+    #monthSelector {
+      margin: 20px auto;
+      display: block;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid var(--gray);
+      background-color: var(--light-gray);
+    }
   </style>
 </head>
 <body>
@@ -145,8 +156,10 @@
       <div class="stat-box">
         <h3>Revenue</h3>
         <p id="revenue">₹0</p>
+        <small>Total: <span id="totalRevenue">₹0</span></small>
       </div>
     </div>
+
     <button id="logoutButton">Logout</button>
 
     <h2>Manage Rooms</h2>
@@ -174,6 +187,10 @@
       <button type="submit">Submit</button>
     </form>
 
+    <select id="monthSelector">
+      <option value="">All Months</option>
+    </select>
+
     <table id="roomsTable">
       <thead>
         <tr>
@@ -184,14 +201,13 @@
           <th>Paid</th>
           <th>Method</th>
           <th>Amount Paid</th>
-          <th>Payment Date</th>
           <th>ID Proof</th>
           <th>Comments</th>
           <th>Actions</th>
         </tr>
       </thead>
       <tbody>
-        <!-- Dynamic rows -->
+        <!-- Dynamic rows will load here -->
       </tbody>
     </table>
   </div>
