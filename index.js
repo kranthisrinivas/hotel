@@ -178,3 +178,13 @@ function logout() {
 
 // Load data when page loads
 loadRooms();
+function logout() {
+  localStorage.removeItem("isAdminLoggedIn");
+  window.location.href = "login.html";
+}
+
+// Load data when page loads
+loadRooms();
+
+// 🛠️ Add this line to connect the button
+document.getElementById("logoutButton").addEventListener("click", logout);
