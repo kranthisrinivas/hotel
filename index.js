@@ -143,7 +143,7 @@ async function loadRooms() {
     <td>${record.fields.PaymentMade || ""}</td>
     <td>${record.fields.PaymentMethod || ""}</td>
     <td>${record.fields.AmountPaid || 0}</td>
-    <td><img src="${record.fields.IDProofUrl}" alt="ID Proof" style="width: 100px; height: auto;"></td> <!-- Correct placement for image -->
+   td><img src="${record.fields.IDProofUrl}" alt="ID Proof" style="width: 300px; height: auto; max-width: 100%"></td> <!-- Larger image size -->
     <td>${record.fields.Comments || ""}</td> <!-- Comments should be text only -->
     <td class="action-btns">
       <button class="edit-btn" onclick="editRoom('${record.id}')">Edit</button>
