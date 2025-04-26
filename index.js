@@ -1,6 +1,5 @@
 const form = document.getElementById("manageRoomsForm");
 
-// Submit form to add or update data in Airtable
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
 
@@ -16,11 +15,10 @@ form.addEventListener("submit", async (e) => {
 
   let idProofUrl = "";
 
-  // Upload ID Proof to Cloudinary
   if (idProofFile) {
     const cloudinaryData = new FormData();
     cloudinaryData.append('file', idProofFile);
-    cloudinaryData.append('upload_preset', 'pg-hostel-idproof'); // Replace with your upload preset
+    cloudinaryData.append('upload_preset', 'pg-hostel-idproof');
 
     try {
       const cloudinaryRes = await fetch(`https://api.cloudinary.com/v1_1/dudx9anuk/upload`, {
@@ -39,6 +37,10 @@ form.addEventListener("submit", async (e) => {
     return;
   }
 
+  // Automatically generate payment month (e.g., April 2025)
+  const now = new Date();
+  const paymentMonth = now.toLocaleString('default', { month: 'long', year: 'numeric' });
+
   const data = {
     fields: {
       RoomNumber: roomNumber,
@@ -50,45 +52,58 @@ form.addEventListener("submit", async (e) => {
       AmountPaid: amountPaid,
       Comments: comments,
       IDProofUrl: idProofUrl,
+      PaymentMonth: paymentMonth, // Save payment month
     }
   };
 
-  const recordIdInput = form.querySelector("input[name='recordId']");
-  const recordId = recordIdInput ? recordIdInput.value : null;
+  const recordId = form.querySelector("input[name='recordId']")?.value;
 
-  const url = recordId
-    ? `https://api.airtable.com/v0/appY6ucd2CU1tr5AH/Rooms/${recordId}`
-    : "https://api.airtable.com/v0/appY6ucd2CU1tr5AH/Rooms";
+  if (recordId) {
+    try {
+      const response = await fetch(`https://api.airtable.com/v0/appY6ucd2CU1tr5AH/Rooms/${recordId}`, {
+        method: "PATCH",
+        headers: {
+          Authorization: "Bearer pat9VLsxcOkP4PdEy.6730536908ce848e0ccc8517889828b0e427bc3612eab0777e14899f0f61d04b",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
 
-  const method = recordId ? "PATCH" : "POST";
-
-  try {
-    const response = await fetch(url, {
-      method,
-      headers: {
-        Authorization: "Bearer pat9VLsxcOkP4PdEy.6730536908ce848e0ccc8517889828b0e427bc3612eab0777e14899f0f61d04b", // Replace with your API Key
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-    });
-
-    const result = await response.json();
-
-    if (response.ok) {
-      alert(recordId ? "Room details updated successfully!" : "Room details added successfully!");
-      form.reset();
-      if (recordIdInput) recordIdInput.remove();
-      loadRooms();
-    } else {
-      console.error("Airtable error:", result);
+      if (response.ok) {
+        alert("Room details updated successfully!");
+        form.reset();
+        loadRooms();
+      } else {
+        console.error("Airtable error during update:", await response.json());
+      }
+    } catch (error) {
+      console.error("Error updating data:", error);
     }
-  } catch (error) {
-    console.error("Error submitting data:", error);
+  } else {
+    try {
+      const response = await fetch("https://api.airtable.com/v0/appY6ucd2CU1tr5AH/Rooms", {
+        method: "POST",
+        headers: {
+          Authorization: "Bearer pat9VLsxcOkP4PdEy.6730536908ce848e0ccc8517889828b0e427bc3612eab0777e14899f0f61d04b",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (response.ok) {
+        alert("Room details added successfully!");
+        form.reset();
+        loadRooms();
+      } else {
+        console.error("Airtable error during add:", await response.json());
+      }
+    } catch (error) {
+      console.error("Error submitting data:", error);
+    }
   }
 });
 
-// Fetch and render room data
-async function loadRooms() {
+async function loadRooms(selectedMonth = "") {
   const response = await fetch("https://api.airtable.com/v0/appY6ucd2CU1tr5AH/Rooms", {
     method: "GET",
     headers: {
@@ -99,20 +114,34 @@ async function loadRooms() {
   const data = await response.json();
   const tableBody = document.querySelector("#roomsTable tbody");
   const revenueElement = document.getElementById("revenue");
+  const totalRevenueElement = document.getElementById("totalRevenue");
   const occupiedBedsElement = document.getElementById("occupiedBeds");
+  const monthSelector = document.getElementById("monthSelector");
 
   let totalRevenue = 0;
+  let filteredRevenue = 0;
   let occupiedBeds = 0;
+  const uniqueMonths = new Set();
 
   tableBody.innerHTML = "";
 
   data.records.forEach((record) => {
-    const row = document.createElement("tr");
-
     const amount = parseFloat(record.fields.AmountPaid || 0);
-    if (!isNaN(amount)) totalRevenue += amount;
-    occupiedBeds += 1;
+    const paymentMonth = record.fields.PaymentMonth || "";
 
+    if (!isNaN(amount)) {
+      totalRevenue += amount;
+      if (!selectedMonth || selectedMonth === paymentMonth) {
+        filteredRevenue += amount;
+        occupiedBeds += 1;
+      }
+    }
+
+    uniqueMonths.add(paymentMonth);
+
+    if (selectedMonth && paymentMonth !== selectedMonth) return;
+
+    const row = document.createElement("tr");
     row.innerHTML = `
       <td>${record.fields.RoomNumber || ""}</td>
       <td>${record.fields.BedNumber || ""}</td>
@@ -134,9 +163,25 @@ async function loadRooms() {
     tableBody.appendChild(row);
   });
 
-  revenueElement.textContent = `₹${totalRevenue}`;
+  // Fill dropdown if empty
+  if (monthSelector.options.length <= 1) {
+    [...uniqueMonths].sort().forEach((month) => {
+      const option = document.createElement("option");
+      option.value = month;
+      option.textContent = month;
+      monthSelector.appendChild(option);
+    });
+  }
+
+  revenueElement.textContent = `₹${filteredRevenue}`;
+  totalRevenueElement.textContent = `₹${totalRevenue}`;
   occupiedBedsElement.textContent = occupiedBeds;
 }
+
+document.getElementById("monthSelector").addEventListener("change", function() {
+  const selectedMonth = this.value;
+  loadRooms(selectedMonth);
+});
 
 async function editRoom(recordId) {
   const response = await fetch(`https://api.airtable.com/v0/appY6ucd2CU1tr5AH/Rooms/${recordId}`, {
@@ -158,16 +203,11 @@ async function editRoom(recordId) {
   form.amountPaid.value = record.AmountPaid || "";
   form.comments.value = record.Comments || "";
 
-  let existingInput = form.querySelector("input[name='recordId']");
-  if (existingInput) {
-    existingInput.value = recordId;
-  } else {
-    const hiddenInput = document.createElement("input");
-    hiddenInput.type = "hidden";
-    hiddenInput.name = "recordId";
-    hiddenInput.value = recordId;
-    form.appendChild(hiddenInput);
-  }
+  const hiddenInput = document.createElement("input");
+  hiddenInput.type = "hidden";
+  hiddenInput.name = "recordId";
+  hiddenInput.value = recordId;
+  form.appendChild(hiddenInput);
 }
 
 async function deleteRoom(recordId) {
@@ -182,8 +222,7 @@ async function deleteRoom(recordId) {
     alert("Room deleted successfully!");
     loadRooms();
   } else {
-    const result = await response.json();
-    console.error("Error deleting room:", result);
+    console.error("Error deleting room:", await response.json());
   }
 }
 
@@ -192,6 +231,6 @@ function logout() {
   window.location.href = "login.html";
 }
 
-// Load data on page load
+// Load data when page loads
 loadRooms();
 document.getElementById("logoutButton").addEventListener("click", logout);
