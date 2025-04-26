@@ -170,6 +170,11 @@ async function deleteRoom(recordId) {
     console.error("Error deleting room:", result);
   }
 }
+function logout() {
+  localStorage.removeItem("isAdminLoggedIn");
+  window.location.href = "login.html";
+}
+
 
 // Load data when page loads
 loadRooms();
