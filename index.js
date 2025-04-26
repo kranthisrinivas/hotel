@@ -128,31 +128,32 @@ async function loadRooms() {
 
   tableBody.innerHTML = "";
 
-  data.records.forEach((record) => {
-    const row = document.createElement("tr");
+ data.records.forEach((record) => {
+  const row = document.createElement("tr");
 
-    const amount = parseFloat(record.fields.AmountPaid || 0);
-    if (!isNaN(amount)) totalRevenue += amount;
-    occupiedBeds += 1;
+  const amount = parseFloat(record.fields.AmountPaid || 0);
+  if (!isNaN(amount)) totalRevenue += amount;
+  occupiedBeds += 1;
 
-    row.innerHTML = `
-      <td>${record.fields.RoomNumber || ""}</td>
-      <td>${record.fields.BedNumber || ""}</td>
-      <td>${record.fields.TenantName || ""}</td>
-      <td>${record.fields.PhoneNumber || ""}</td>
-      <td>${record.fields.PaymentMade || ""}</td>
-      <td>${record.fields.PaymentMethod || ""}</td>
-      <td>${record.fields.AmountPaid || 0}</td>
-      <td><img src="${record.fields.IDProofUrl}" alt="ID Proof" style="width: 100px; height: auto;"></td> <!-- Show Image -->
-      <td>${record.fields.Comments || ""}</td>
-      <td class="action-btns">
-        <button class="edit-btn" onclick="editRoom('${record.id}')">Edit</button>
-        <button class="delete-btn" onclick="deleteRoom('${record.id}')">Delete</button>
-      </td>
-    `;
+  row.innerHTML = `
+    <td>${record.fields.RoomNumber || ""}</td>
+    <td>${record.fields.BedNumber || ""}</td>
+    <td>${record.fields.TenantName || ""}</td>
+    <td>${record.fields.PhoneNumber || ""}</td>
+    <td>${record.fields.PaymentMade || ""}</td>
+    <td>${record.fields.PaymentMethod || ""}</td>
+    <td>${record.fields.AmountPaid || 0}</td>
+    <td><img src="${record.fields.IDProofUrl}" alt="ID Proof" style="width: 100px; height: auto;"></td> <!-- Correct placement for image -->
+    <td>${record.fields.Comments || ""}</td> <!-- Comments should be text only -->
+    <td class="action-btns">
+      <button class="edit-btn" onclick="editRoom('${record.id}')">Edit</button>
+      <button class="delete-btn" onclick="deleteRoom('${record.id}')">Delete</button>
+    </td>
+  `;
 
-    tableBody.appendChild(row);
-  });
+  tableBody.appendChild(row);
+});
+
 
   // Update revenue and occupied beds
   revenueElement.textContent = `₹${totalRevenue}`;
