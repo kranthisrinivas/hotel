@@ -2,6 +2,11 @@
   if (!localStorage.getItem("isAdminLoggedIn")) {
     window.location.href = "login.html";
   }
+  function logout() {
+  localStorage.removeItem("isAdminLoggedIn");
+  window.location.href = "login.html";
+}
+
 </script>
 
 <!DOCTYPE html>
