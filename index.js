@@ -1,24 +1,5 @@
 const form = document.getElementById("manageRoomsForm");
 
-// Cloudinary details
-const cloudName = "dudx9anuk"; // ⚡ replace with your cloud name
-const uploadPreset = "pg-hostel-idproof"; // ⚡ replace with your upload preset
-
-async function uploadToCloudinary(file) {
-  const url = `https://api.cloudinary.com/v1_1/${cloudName}/upload`;
-  const formData = new FormData();
-  formData.append("file", file);
-  formData.append("upload_preset", uploadPreset);
-
-  const response = await fetch(url, {
-    method: "POST",
-    body: formData,
-  });
-
-  const data = await response.json();
-  return data.secure_url;
-}
-
 // Submit form to add or update data in Airtable
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -31,19 +12,35 @@ form.addEventListener("submit", async (e) => {
   const paymentMethod = form.paymentMethod.value;
   const amountPaid = parseFloat(form.amountPaid.value);
   const comments = form.comments.value;
-  const idProofFile = form.idProof.files[0];
+  const idProofFile = form.idProof.files[0]; // Getting the ID Proof file
 
-  let idProofUrl = "";
+  let idProofUrl = ""; // URL of the uploaded ID Proof
 
+  // Check if file is selected
   if (idProofFile) {
+    // Upload image to Cloudinary
+    const cloudinaryData = new FormData();
+    cloudinaryData.append('file', idProofFile);
+    cloudinaryData.append('upload_preset', 'pg-hostel-idproof'); // Replace with your preset
+
     try {
-      idProofUrl = await uploadToCloudinary(idProofFile);
+      const cloudinaryRes = await fetch(`https://api.cloudinary.com/v1_1/dudx9anuk/upload`, { // Replace with your Cloudinary details
+        method: 'POST',
+        body: cloudinaryData,
+      });
+      const cloudinaryResult = await cloudinaryRes.json();
+      idProofUrl = cloudinaryResult.secure_url; // Get the image URL from Cloudinary
     } catch (error) {
-      alert("Failed to upload ID Proof");
+      console.error('Cloudinary upload failed:', error);
+      alert('Failed to upload ID Proof');
       return;
     }
+  } else {
+    alert('Please upload ID Proof');
+    return;
   }
 
+  // Prepare data to save to Airtable
   const data = {
     fields: {
       RoomNumber: roomNumber,
@@ -53,19 +50,20 @@ form.addEventListener("submit", async (e) => {
       PaymentMade: paymentMade,
       PaymentMethod: paymentMethod,
       AmountPaid: amountPaid,
-      IDProof: idProofUrl, // 🆕 saving URL
       Comments: comments,
+      IDProofUrl: idProofUrl, // Add the ID Proof URL
     }
   };
 
   const recordId = form.querySelector("input[name='recordId']")?.value;
 
+  // If recordId exists, it's an update operation
   if (recordId) {
     try {
       const response = await fetch(`https://api.airtable.com/v0/appY6ucd2CU1tr5AH/Rooms/${recordId}`, {
         method: "PATCH",
         headers: {
-          Authorization: "Bearer pat9VLsxcOkP4PdEy.6730536908ce848e0ccc8517889828b0e427bc3612eab0777e14899f0f61d04b",
+          Authorization: "Bearer pat9VLsxcOkP4PdEy.6730536908ce848e0ccc8517889828b0e427bc3612eab0777e14899f0f61d04b", // Replace with your Airtable API Key
           "Content-Type": "application/json",
         },
         body: JSON.stringify(data),
@@ -84,11 +82,12 @@ form.addEventListener("submit", async (e) => {
       console.error("Error updating data:", error);
     }
   } else {
+    // If no recordId, it means we're adding a new room
     try {
       const response = await fetch("https://api.airtable.com/v0/appY6ucd2CU1tr5AH/Rooms", {
         method: "POST",
         headers: {
-          Authorization: "Bearer pat9VLsxcOkP4PdEy.6730536908ce848e0ccc8517889828b0e427bc3612eab0777e14899f0f61d04b ",
+          Authorization: "Bearer pat9VLsxcOkP4PdEy.6730536908ce848e0ccc8517889828b0e427bc3612eab0777e14899f0f61d04b", // Replace with your Airtable API Key
           "Content-Type": "application/json",
         },
         body: JSON.stringify(data),
@@ -109,12 +108,12 @@ form.addEventListener("submit", async (e) => {
   }
 });
 
-// Fetch and render room data
+// Fetch and render room data + update revenue & occupied beds
 async function loadRooms() {
   const response = await fetch("https://api.airtable.com/v0/appY6ucd2CU1tr5AH/Rooms", {
     method: "GET",
     headers: {
-      Authorization: "Bearer pat9VLsxcOkP4PdEy.6730536908ce848e0ccc8517889828b0e427bc3612eab0777e14899f0f61d04b",
+      Authorization: "Bearer pat9VLsxcOkP4PdEy.6730536908ce848e0ccc8517889828b0e427bc3612eab0777e14899f0f61d04b", // Replace with your Airtable API Key
     },
   });
 
@@ -144,9 +143,7 @@ async function loadRooms() {
       <td>${record.fields.PaymentMade || ""}</td>
       <td>${record.fields.PaymentMethod || ""}</td>
       <td>${record.fields.AmountPaid || 0}</td>
-      <td>
-        ${record.fields.IDProof ? `<img src="${record.fields.IDProof}" alt="ID Proof" style="width:60px;height:60px;border-radius:5px;object-fit:cover;">` : "N/A"}
-      </td>
+      <td><img src="${record.fields.IDProofUrl}" alt="ID Proof" style="width: 100px; height: auto;"></td> <!-- Show Image -->
       <td>${record.fields.Comments || ""}</td>
       <td class="action-btns">
         <button class="edit-btn" onclick="editRoom('${record.id}')">Edit</button>
@@ -161,6 +158,10 @@ async function loadRooms() {
   revenueElement.textContent = `₹${totalRevenue}`;
   occupiedBedsElement.textContent = occupiedBeds;
 }
+
+// Other functions (editRoom, deleteRoom, etc.) remain the same
+
+
 
 async function editRoom(recordId) {
   const response = await fetch(`https://api.airtable.com/v0/appY6ucd2CU1tr5AH/Rooms/${recordId}`, {
