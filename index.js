@@ -12,24 +12,23 @@ form.addEventListener("submit", async (e) => {
   const paymentMethod = form.paymentMethod.value;
   const amountPaid = parseFloat(form.amountPaid.value);
   const comments = form.comments.value;
-  const idProofFile = form.idProof.files[0]; // Getting the ID Proof file
+  const idProofFile = form.idProof.files[0];
 
-  let idProofUrl = ""; // URL of the uploaded ID Proof
+  let idProofUrl = "";
 
-  // Check if file is selected
+  // Upload ID Proof to Cloudinary
   if (idProofFile) {
-    // Upload image to Cloudinary
     const cloudinaryData = new FormData();
     cloudinaryData.append('file', idProofFile);
-    cloudinaryData.append('upload_preset', 'pg-hostel-idproof'); // Replace with your preset
+    cloudinaryData.append('upload_preset', 'pg-hostel-idproof'); // Replace with your upload preset
 
     try {
-      const cloudinaryRes = await fetch(`https://api.cloudinary.com/v1_1/dudx9anuk/upload`, { // Replace with your Cloudinary details
+      const cloudinaryRes = await fetch(`https://api.cloudinary.com/v1_1/dudx9anuk/upload`, {
         method: 'POST',
         body: cloudinaryData,
       });
       const cloudinaryResult = await cloudinaryRes.json();
-      idProofUrl = cloudinaryResult.secure_url; // Get the image URL from Cloudinary
+      idProofUrl = cloudinaryResult.secure_url;
     } catch (error) {
       console.error('Cloudinary upload failed:', error);
       alert('Failed to upload ID Proof');
@@ -40,7 +39,6 @@ form.addEventListener("submit", async (e) => {
     return;
   }
 
-  // Prepare data to save to Airtable
   const data = {
     fields: {
       RoomNumber: roomNumber,
@@ -51,74 +49,54 @@ form.addEventListener("submit", async (e) => {
       PaymentMethod: paymentMethod,
       AmountPaid: amountPaid,
       Comments: comments,
-      IDProofUrl: idProofUrl, // Add the ID Proof URL
+      IDProofUrl: idProofUrl,
     }
   };
 
-  const recordId = form.querySelector("input[name='recordId']")?.value;
+  const recordIdInput = form.querySelector("input[name='recordId']");
+  const recordId = recordIdInput ? recordIdInput.value : null;
 
-  // If recordId exists, it's an update operation
-  if (recordId) {
-    try {
-      const response = await fetch(`https://api.airtable.com/v0/appY6ucd2CU1tr5AH/Rooms/${recordId}`, {
-        method: "PATCH",
-        headers: {
-          Authorization: "Bearer pat9VLsxcOkP4PdEy.6730536908ce848e0ccc8517889828b0e427bc3612eab0777e14899f0f61d04b", // Replace with your Airtable API Key
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      });
+  const url = recordId
+    ? `https://api.airtable.com/v0/appY6ucd2CU1tr5AH/Rooms/${recordId}`
+    : "https://api.airtable.com/v0/appY6ucd2CU1tr5AH/Rooms";
 
-      const result = await response.json();
+  const method = recordId ? "PATCH" : "POST";
 
-      if (response.ok) {
-        alert("Room details updated successfully!");
-        form.reset();
-        loadRooms();
-      } else {
-        console.error("Airtable error:", result);
-      }
-    } catch (error) {
-      console.error("Error updating data:", error);
+  try {
+    const response = await fetch(url, {
+      method,
+      headers: {
+        Authorization: "Bearer pat9VLsxcOkP4PdEy.6730536908ce848e0ccc8517889828b0e427bc3612eab0777e14899f0f61d04b", // Replace with your API Key
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+
+    const result = await response.json();
+
+    if (response.ok) {
+      alert(recordId ? "Room details updated successfully!" : "Room details added successfully!");
+      form.reset();
+      if (recordIdInput) recordIdInput.remove();
+      loadRooms();
+    } else {
+      console.error("Airtable error:", result);
     }
-  } else {
-    // If no recordId, it means we're adding a new room
-    try {
-      const response = await fetch("https://api.airtable.com/v0/appY6ucd2CU1tr5AH/Rooms", {
-        method: "POST",
-        headers: {
-          Authorization: "Bearer pat9VLsxcOkP4PdEy.6730536908ce848e0ccc8517889828b0e427bc3612eab0777e14899f0f61d04b", // Replace with your Airtable API Key
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      });
-
-      const result = await response.json();
-
-      if (response.ok) {
-        alert("Room details added successfully!");
-        form.reset();
-        loadRooms();
-      } else {
-        console.error("Airtable error:", result);
-      }
-    } catch (error) {
-      console.error("Error submitting data:", error);
-    }
+  } catch (error) {
+    console.error("Error submitting data:", error);
   }
 });
 
-// Fetch and render room data + update revenue & occupied beds
+// Fetch and render room data
 async function loadRooms() {
   const response = await fetch("https://api.airtable.com/v0/appY6ucd2CU1tr5AH/Rooms", {
     method: "GET",
     headers: {
-      Authorization: "Bearer pat9VLsxcOkP4PdEy.6730536908ce848e0ccc8517889828b0e427bc3612eab0777e14899f0f61d04b", // Replace with your Airtable API Key
+      Authorization: "Bearer pat9VLsxcOkP4PdEy.6730536908ce848e0ccc8517889828b0e427bc3612eab0777e14899f0f61d04b",
     },
   });
 
   const data = await response.json();
-
   const tableBody = document.querySelector("#roomsTable tbody");
   const revenueElement = document.getElementById("revenue");
   const occupiedBedsElement = document.getElementById("occupiedBeds");
@@ -128,43 +106,37 @@ async function loadRooms() {
 
   tableBody.innerHTML = "";
 
- data.records.forEach((record) => {
-  const row = document.createElement("tr");
+  data.records.forEach((record) => {
+    const row = document.createElement("tr");
 
-  const amount = parseFloat(record.fields.AmountPaid || 0);
-  if (!isNaN(amount)) totalRevenue += amount;
-  occupiedBeds += 1;
+    const amount = parseFloat(record.fields.AmountPaid || 0);
+    if (!isNaN(amount)) totalRevenue += amount;
+    occupiedBeds += 1;
 
-  row.innerHTML = `
-    <td>${record.fields.RoomNumber || ""}</td>
-    <td>${record.fields.BedNumber || ""}</td>
-    <td>${record.fields.TenantName || ""}</td>
-    <td>${record.fields.PhoneNumber || ""}</td>
-    <td>${record.fields.PaymentMade || ""}</td>
-    <td>${record.fields.PaymentMethod || ""}</td>
-    <td>${record.fields.AmountPaid || 0}</td>
-     <td>
-      ${record.fields.IDProofUrl ? `<img src="${record.fields.IDProofUrl}" alt="ID Proof" style="width: 100px; height: auto;">` : ""}
-    </td> <!-- Image only here for ID Proof -->
-    <td>${record.fields.Comments || ""}</td> <!-- Comments should be text only -->
-    <td class="action-btns">
-      <button class="edit-btn" onclick="editRoom('${record.id}')">Edit</button>
-      <button class="delete-btn" onclick="deleteRoom('${record.id}')">Delete</button>
-    </td>
-  `;
+    row.innerHTML = `
+      <td>${record.fields.RoomNumber || ""}</td>
+      <td>${record.fields.BedNumber || ""}</td>
+      <td>${record.fields.TenantName || ""}</td>
+      <td>${record.fields.PhoneNumber || ""}</td>
+      <td>${record.fields.PaymentMade || ""}</td>
+      <td>${record.fields.PaymentMethod || ""}</td>
+      <td>${record.fields.AmountPaid || 0}</td>
+      <td>
+        ${record.fields.IDProofUrl ? `<a href="${record.fields.IDProofUrl}" target="_blank"><img src="${record.fields.IDProofUrl}" alt="ID Proof" style="width: 80px; height: auto;"></a>` : ""}
+      </td>
+      <td>${record.fields.Comments || ""}</td>
+      <td class="action-btns">
+        <button class="edit-btn" onclick="editRoom('${record.id}')">Edit</button>
+        <button class="delete-btn" onclick="deleteRoom('${record.id}')">Delete</button>
+      </td>
+    `;
 
-  tableBody.appendChild(row);
-});
+    tableBody.appendChild(row);
+  });
 
-
-  // Update revenue and occupied beds
   revenueElement.textContent = `₹${totalRevenue}`;
   occupiedBedsElement.textContent = occupiedBeds;
 }
-
-// Other functions (editRoom, deleteRoom, etc.) remain the same
-
-
 
 async function editRoom(recordId) {
   const response = await fetch(`https://api.airtable.com/v0/appY6ucd2CU1tr5AH/Rooms/${recordId}`, {
@@ -186,11 +158,16 @@ async function editRoom(recordId) {
   form.amountPaid.value = record.AmountPaid || "";
   form.comments.value = record.Comments || "";
 
-  const hiddenInput = document.createElement("input");
-  hiddenInput.type = "hidden";
-  hiddenInput.name = "recordId";
-  hiddenInput.value = recordId;
-  form.appendChild(hiddenInput);
+  let existingInput = form.querySelector("input[name='recordId']");
+  if (existingInput) {
+    existingInput.value = recordId;
+  } else {
+    const hiddenInput = document.createElement("input");
+    hiddenInput.type = "hidden";
+    hiddenInput.name = "recordId";
+    hiddenInput.value = recordId;
+    form.appendChild(hiddenInput);
+  }
 }
 
 async function deleteRoom(recordId) {
@@ -215,6 +192,6 @@ function logout() {
   window.location.href = "login.html";
 }
 
-// Load data when page loads
+// Load data on page load
 loadRooms();
 document.getElementById("logoutButton").addEventListener("click", logout);
