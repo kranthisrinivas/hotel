@@ -134,6 +134,28 @@
       border: 1px solid var(--gray);
       background-color: var(--light-gray);
     }
+    #toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #22c55e;
+      color: white;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 16px;
+      box-shadow: 0px 4px 12px rgba(0,0,0,0.1);
+      display: none;
+      animation: fadeInOut 2s ease forwards;
+      z-index: 9999;
+    }
+
+    @keyframes fadeInOut {
+      0% { opacity: 0; transform: translateX(-50%) translateY(20px); }
+      10% { opacity: 1; transform: translateX(-50%) translateY(0); }
+      90% { opacity: 1; transform: translateX(-50%) translateY(0); }
+      100% { opacity: 0; transform: translateX(-50%) translateY(20px); }
+    }
   </style>
 </head>
 <body>
@@ -161,6 +183,7 @@
     </div>
 
     <button id="logoutButton">Logout</button>
+  
 
     <h2>Manage Rooms</h2>
     <form id="manageRoomsForm">
@@ -211,6 +234,7 @@
       </tbody>
     </table>
   </div>
+  <div id="toast"></div>
 
   <script src="index.js"></script>
 </body>
