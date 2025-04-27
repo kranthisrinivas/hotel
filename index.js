@@ -41,6 +41,12 @@ form.addEventListener("submit", async (e) => {
 
   let idProofUrl = existingIdProofUrl; // Default to existing
 
+  // Validate required fields
+  if (!roomNumber || !bedNumber || !tenantName || !phoneNumber || !amountPaid || !paymentMade || !paymentMethod || !paymentMonth) {
+    alert("Please fill out all required fields.");
+    return;
+  }
+
   if (idProofFile) {
     const cloudinaryData = new FormData();
     cloudinaryData.append('file', idProofFile);
@@ -131,6 +137,7 @@ async function editRoom(recordId) {
     form.paymentMethod.value = record.PaymentMethod || "";
     form.amountPaid.value = record.AmountPaid || "";
     form.comments.value = record.Comments || "";
+    form.paymentMonth.value = record.PaymentMonth || ""; // <-- Set existing payment month
 
     existingIdProofUrl = record.IDProofUrl || "";
     existingPaymentMonth = record.PaymentMonth || ""; // <-- Save existing payment month
@@ -246,4 +253,4 @@ document.getElementById('logoutBtn').addEventListener('click', function() {
 });
 
 // Load rooms on page load
-window.addEventListener("DOMContentLoaded", loadRooms);
+window.addEventListener("
