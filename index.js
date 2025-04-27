@@ -1,6 +1,7 @@
 const form = document.getElementById("manageRoomsForm");
 let existingIdProofUrl = ""; // Track existing ID proof
 let editingRecordId = null; // Track if editing
+let existingPaymentMonth = ""; // Track existing Payment Month
 
 const airtableBaseUrl = "https://api.airtable.com/v0/appY6ucd2CU1tr5AH/Rooms";
 const airtableApiKey = "pat9VLsxcOkP4PdEy.6730536908ce848e0ccc8517889828b0e427bc3612eab0777e14899f0f61d04b";
@@ -18,6 +19,7 @@ function showToast(message) {
 // Remove hidden record ID
 function removeHiddenRecordId() {
   editingRecordId = null;
+  existingPaymentMonth = ""; // Reset payment month
   form.querySelector("input[name='recordId']")?.remove();
   document.getElementById("submitBtn").innerText = "Add Room"; // Reset button text
 }
@@ -63,7 +65,7 @@ form.addEventListener("submit", async (e) => {
   }
 
   const now = new Date();
-  const paymentMonth = now.toLocaleString('default', { month: 'long', year: 'numeric' });
+  const currentPaymentMonth = now.toLocaleString('default', { month: 'long', year: 'numeric' });
 
   const data = {
     fields: {
@@ -76,7 +78,7 @@ form.addEventListener("submit", async (e) => {
       AmountPaid: amountPaid,
       Comments: comments,
       IDProofUrl: idProofUrl,
-      PaymentMonth: paymentMonth,
+      PaymentMonth: editingRecordId ? existingPaymentMonth : currentPaymentMonth, // <-- KEY FIX
     }
   };
 
@@ -129,6 +131,8 @@ async function editRoom(recordId) {
     form.comments.value = record.Comments || "";
 
     existingIdProofUrl = record.IDProofUrl || "";
+    existingPaymentMonth = record.PaymentMonth || ""; // <-- Save existing payment month
+
     const idProofPreview = document.getElementById("existingIdProofPreview");
     if (existingIdProofUrl) {
       idProofPreview.innerHTML = `
@@ -234,13 +238,10 @@ async function loadRooms() {
     console.error("Error loading rooms:", error);
   }
 }
-document.getElementById('logoutBtn').addEventListener('click', function() {
-  // You can redirect to login page or GitHub page etc.
-  window.location.href = "https://kranthisrinivas.github.io/hotel/login.html"; 
-  // OR just show an alert for now
-  // alert("Logged out successfully!");
-});
 
+document.getElementById('logoutBtn').addEventListener('click', function() {
+  window.location.href = "https://kranthisrinivas.github.io/hotel/login.html"; 
+});
 
 // Load rooms on page load
 window.addEventListener("DOMContentLoaded", loadRooms);
