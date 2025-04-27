@@ -209,6 +209,7 @@ async function loadRooms() {
         <td>${fields.PaymentMade || ""}</td>
         <td>${fields.PaymentMethod || ""}</td>
         <td>₹${fields.AmountPaid || 0}</td>
+        <td>${fields.PaymentMonth || ""}</td>
         <td>${fields.IDProofUrl ? `<a href="${fields.IDProofUrl}" target="_blank">View</a>` : ""}</td>
         <td>${fields.Comments || ""}</td>
         <td class="action-btns">
