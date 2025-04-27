@@ -252,8 +252,50 @@ async function deleteRoom(recordId) {
 }
 
 // Dummy function for editRoom (you can build later)
-function editRoom(recordId) {
-  alert(`Edit function for record ID: ${recordId} not implemented yet.`);
+async function editRoom(recordId) {
+  try {
+    const response = await fetch(`${airtableBaseUrl}/${recordId}`, {
+      headers: {
+        Authorization: `Bearer ${airtableApiKey}`,
+      },
+    });
+    const data = await response.json();
+    const fields = data.fields;
+
+    const newTenantName = prompt("Edit Tenant Name:", fields.TenantName || "");
+    const newPhoneNumber = prompt("Edit Phone Number:", fields.PhoneNumber || "");
+    const newPaymentMade = prompt("Payment Made? (Yes/No):", fields.PaymentMade || "No");
+    const newPaymentMethod = prompt("Edit Payment Method:", fields.PaymentMethod || "");
+    const newAmountPaid = parseFloat(prompt("Edit Amount Paid:", fields.AmountPaid || "0")) || 0;
+    const newComments = prompt("Edit Comments:", fields.Comments || "");
+
+    const updatedFields = {
+      TenantName: newTenantName,
+      PhoneNumber: newPhoneNumber,
+      PaymentMade: newPaymentMade,
+      PaymentMethod: newPaymentMethod,
+      AmountPaid: newAmountPaid,
+      Comments: newComments,
+    };
+
+    const updateResponse = await fetch(`${airtableBaseUrl}/${recordId}`, {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${airtableApiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ fields: updatedFields }),
+    });
+
+    if (updateResponse.ok) {
+      showToast("✅ Room updated successfully!");
+      await loadRooms(); // Refresh table
+    } else {
+      console.error("Failed to update:", await updateResponse.json());
+    }
+  } catch (error) {
+    console.error("Error editing room:", error);
+  }
 }
 
 // Simple toast message
