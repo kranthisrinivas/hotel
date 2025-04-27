@@ -234,6 +234,13 @@ async function loadRooms() {
     console.error("Error loading rooms:", error);
   }
 }
+document.getElementById('logoutBtn').addEventListener('click', function() {
+  // You can redirect to login page or GitHub page etc.
+  window.location.href = "https://kranthisrinivas.github.io/hotel/login.html"; 
+  // OR just show an alert for now
+  // alert("Logged out successfully!");
+});
+
 
 // Load rooms on page load
 window.addEventListener("DOMContentLoaded", loadRooms);
