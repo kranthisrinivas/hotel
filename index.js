@@ -1,5 +1,14 @@
 const form = document.getElementById("manageRoomsForm");
 
+function showToast(message) {
+  const toast = document.getElementById("toast");
+  toast.textContent = message;
+  toast.style.display = "block";
+  setTimeout(() => {
+    toast.style.display = "none";
+  }, 2000);
+}
+
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
 
@@ -37,7 +46,6 @@ form.addEventListener("submit", async (e) => {
     return;
   }
 
-  // Automatically generate payment month (e.g., April 2025)
   const now = new Date();
   const paymentMonth = now.toLocaleString('default', { month: 'long', year: 'numeric' });
 
@@ -52,7 +60,7 @@ form.addEventListener("submit", async (e) => {
       AmountPaid: amountPaid,
       Comments: comments,
       IDProofUrl: idProofUrl,
-      PaymentMonth: paymentMonth, // Save payment month
+      PaymentMonth: paymentMonth,
     }
   };
 
@@ -70,10 +78,10 @@ form.addEventListener("submit", async (e) => {
       });
 
       if (response.ok) {
-        alert("Room details updated successfully!");
+        showToast("✅ Room updated successfully!");
         form.reset();
-        removeHiddenRecordId(); // Important
-        await loadRooms(); // <-- Properly reload rooms
+        removeHiddenRecordId();
+        await loadRooms();
       } else {
         console.error("Airtable error during update:", await response.json());
       }
@@ -92,9 +100,9 @@ form.addEventListener("submit", async (e) => {
       });
 
       if (response.ok) {
-        alert("Room details added successfully!");
+        showToast("✅ Room added successfully!");
         form.reset();
-        await loadRooms(); // <-- Properly reload rooms
+        await loadRooms();
       } else {
         console.error("Airtable error during add:", await response.json());
       }
@@ -164,7 +172,6 @@ async function loadRooms(selectedMonth = "") {
     tableBody.appendChild(row);
   });
 
-  // Fill dropdown if empty
   if (monthSelector.options.length <= 1) {
     [...uniqueMonths].sort().forEach((month) => {
       const option = document.createElement("option");
@@ -223,7 +230,7 @@ async function deleteRoom(recordId) {
   });
 
   if (response.ok) {
-    alert("Room deleted successfully!");
+    showToast("✅ Room deleted successfully!");
     await loadRooms();
   } else {
     console.error("Error deleting room:", await response.json());
@@ -242,6 +249,5 @@ function removeHiddenRecordId() {
   }
 }
 
-// Load data when page loads
 loadRooms();
 document.getElementById("logoutButton").addEventListener("click", logout);
