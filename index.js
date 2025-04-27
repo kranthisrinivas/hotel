@@ -1,4 +1,5 @@
 const form = document.getElementById("manageRoomsForm");
+let existingIdProofUrl = ""; // Track existing ID proof
 
 function showToast(message) {
   const toast = document.getElementById("toast");
@@ -22,7 +23,7 @@ form.addEventListener("submit", async (e) => {
   const comments = form.comments.value;
   const idProofFile = form.idProof.files[0];
 
-  let idProofUrl = "";
+  let idProofUrl = existingIdProofUrl; // Default to existing
 
   if (idProofFile) {
     const cloudinaryData = new FormData();
@@ -41,7 +42,9 @@ form.addEventListener("submit", async (e) => {
       alert('Failed to upload ID Proof');
       return;
     }
-  } else {
+  }
+
+  if (!idProofUrl) {
     alert('Please upload ID Proof');
     return;
   }
@@ -80,7 +83,9 @@ form.addEventListener("submit", async (e) => {
       if (response.ok) {
         showToast("✅ Room updated successfully!");
         form.reset();
+        existingIdProofUrl = "";
         removeHiddenRecordId();
+        document.getElementById("existingIdProofPreview").innerHTML = "";
         await loadRooms();
       } else {
         console.error("Airtable error during update:", await response.json());
@@ -102,6 +107,8 @@ form.addEventListener("submit", async (e) => {
       if (response.ok) {
         showToast("✅ Room added successfully!");
         form.reset();
+        existingIdProofUrl = "";
+        document.getElementById("existingIdProofPreview").innerHTML = "";
         await loadRooms();
       } else {
         console.error("Airtable error during add:", await response.json());
@@ -110,85 +117,6 @@ form.addEventListener("submit", async (e) => {
       console.error("Error submitting data:", error);
     }
   }
-});
-
-async function loadRooms(selectedMonth = "") {
-  const response = await fetch("https://api.airtable.com/v0/appY6ucd2CU1tr5AH/Rooms", {
-    method: "GET",
-    headers: {
-      Authorization: "Bearer pat9VLsxcOkP4PdEy.6730536908ce848e0ccc8517889828b0e427bc3612eab0777e14899f0f61d04b",
-    },
-  });
-
-  const data = await response.json();
-  const tableBody = document.querySelector("#roomsTable tbody");
-  const revenueElement = document.getElementById("revenue");
-  const totalRevenueElement = document.getElementById("totalRevenue");
-  const occupiedBedsElement = document.getElementById("occupiedBeds");
-  const monthSelector = document.getElementById("monthSelector");
-
-  let totalRevenue = 0;
-  let filteredRevenue = 0;
-  let occupiedBeds = 0;
-  const uniqueMonths = new Set();
-
-  tableBody.innerHTML = "";
-
-  data.records.forEach((record) => {
-    const amount = parseFloat(record.fields.AmountPaid || 0);
-    const paymentMonth = record.fields.PaymentMonth || "";
-
-    if (!isNaN(amount)) {
-      totalRevenue += amount;
-      if (!selectedMonth || selectedMonth === paymentMonth) {
-        filteredRevenue += amount;
-        occupiedBeds += 1;
-      }
-    }
-
-    uniqueMonths.add(paymentMonth);
-
-    if (selectedMonth && paymentMonth !== selectedMonth) return;
-
-    const row = document.createElement("tr");
-    row.innerHTML = `
-      <td>${record.fields.RoomNumber || ""}</td>
-      <td>${record.fields.BedNumber || ""}</td>
-      <td>${record.fields.TenantName || ""}</td>
-      <td>${record.fields.PhoneNumber || ""}</td>
-      <td>${record.fields.PaymentMade || ""}</td>
-      <td>${record.fields.PaymentMethod || ""}</td>
-      <td>${record.fields.AmountPaid || 0}</td>
-      <td>
-        ${record.fields.IDProofUrl ? `<a href="${record.fields.IDProofUrl}" target="_blank"><img src="${record.fields.IDProofUrl}" alt="ID Proof" style="width: 80px; height: auto;"></a>` : ""}
-      </td>
-      <td>${record.fields.Comments || ""}</td>
-      <td class="action-btns">
-        <button class="edit-btn" onclick="editRoom('${record.id}')">Edit</button>
-        <button class="delete-btn" onclick="deleteRoom('${record.id}')">Delete</button>
-      </td>
-    `;
-
-    tableBody.appendChild(row);
-  });
-
-  if (monthSelector.options.length <= 1) {
-    [...uniqueMonths].sort().forEach((month) => {
-      const option = document.createElement("option");
-      option.value = month;
-      option.textContent = month;
-      monthSelector.appendChild(option);
-    });
-  }
-
-  revenueElement.textContent = `₹${filteredRevenue}`;
-  totalRevenueElement.textContent = `₹${totalRevenue}`;
-  occupiedBedsElement.textContent = occupiedBeds;
-}
-
-document.getElementById("monthSelector").addEventListener("change", function() {
-  const selectedMonth = this.value;
-  loadRooms(selectedMonth);
 });
 
 async function editRoom(recordId) {
@@ -211,6 +139,19 @@ async function editRoom(recordId) {
   form.amountPaid.value = record.AmountPaid || "";
   form.comments.value = record.Comments || "";
 
+  // Set existing ID proof
+  existingIdProofUrl = record.IDProofUrl || "";
+  const idProofPreview = document.getElementById("existingIdProofPreview");
+  if (existingIdProofUrl) {
+    idProofPreview.innerHTML = `
+      <a href="${existingIdProofUrl}" target="_blank">
+        <img src="${existingIdProofUrl}" alt="Existing ID Proof" style="width: 100px; height: auto; margin-top: 8px; border: 1px solid #ccc; padding: 4px;">
+      </a>
+    `;
+  } else {
+    idProofPreview.innerHTML = "";
+  }
+
   let hiddenInput = form.querySelector("input[name='recordId']");
   if (!hiddenInput) {
     hiddenInput = document.createElement("input");
@@ -221,33 +162,9 @@ async function editRoom(recordId) {
   hiddenInput.value = recordId;
 }
 
-async function deleteRoom(recordId) {
-  const response = await fetch(`https://api.airtable.com/v0/appY6ucd2CU1tr5AH/Rooms/${recordId}`, {
-    method: "DELETE",
-    headers: {
-      Authorization: "Bearer pat9VLsxcOkP4PdEy.6730536908ce848e0ccc8517889828b0e427bc3612eab0777e14899f0f61d04b",
-    },
-  });
-
-  if (response.ok) {
-    showToast("✅ Room deleted successfully!");
-    await loadRooms();
-  } else {
-    console.error("Error deleting room:", await response.json());
-  }
-}
-
-function logout() {
-  localStorage.removeItem("isAdminLoggedIn");
-  window.location.href = "login.html";
-}
-
 function removeHiddenRecordId() {
   const hiddenInput = form.querySelector("input[name='recordId']");
   if (hiddenInput) {
     hiddenInput.remove();
   }
 }
-
-loadRooms();
-document.getElementById("logoutButton").addEventListener("click", logout);
