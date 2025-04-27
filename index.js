@@ -256,4 +256,4 @@ document.getElementById('logoutBtn').addEventListener('click', function() {
 });
 
 // Load rooms on page load
-window.addEventListener("
+window.addEventListener("DOMContentLoaded", loadRooms);
