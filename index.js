@@ -198,6 +198,8 @@ async function loadRooms() {
 
   let occupiedBedsCount = 0;
   let totalRevenue = 0;
+  const revenueByMonth = {};  // Object to store revenue by month
+  const months = new Set();  // Set to hold unique payment months
 
   try {
     const response = await fetch(airtableBaseUrl, {
@@ -206,9 +208,20 @@ async function loadRooms() {
       },
     });
     const data = await response.json();
-
     data.records.forEach(record => {
       const fields = record.fields;
+      const paymentMonth = fields.PaymentMonth || "Unknown";  // Default to "Unknown" if no month
+
+      // Update revenue by month
+      if (!revenueByMonth[paymentMonth]) {
+        revenueByMonth[paymentMonth] = 0;
+      }
+      if (fields.PaymentMade === "Yes" && fields.AmountPaid) {
+        revenueByMonth[paymentMonth] += fields.AmountPaid;
+      }
+
+      // Add month to the set
+      months.add(paymentMonth);
 
       const row = document.createElement("tr");
       row.innerHTML = `
@@ -236,10 +249,32 @@ async function loadRooms() {
         totalRevenue += fields.AmountPaid;
       }
     });
+    
+    // Set revenue for all months in the monthSelector dropdown
+    const monthSelector = document.getElementById("monthSelector");
+    monthSelector.innerHTML = "<option value=''>All Months</option>"; // Reset the dropdown
+    months.forEach(month => {
+      const option = document.createElement("option");
+      option.value = month;
+      option.textContent = month;
+      monthSelector.appendChild(option);
+    });
 
     document.getElementById("occupiedBeds").textContent = occupiedBedsCount;
-    document.getElementById("revenue").textContent = `₹${totalRevenue}`;
     document.getElementById("totalRevenue").textContent = `₹${totalRevenue}`;
+     // Function to update displayed revenue based on selected month
+    monthSelector.addEventListener('change', function() {
+      const selectedMonth = monthSelector.value;
+
+      // Filter revenue by the selected month
+      const filteredRevenue = selectedMonth ? revenueByMonth[selectedMonth] : totalRevenue;
+
+      // Display the filtered revenue
+      document.getElementById("revenue").textContent = `₹${filteredRevenue}`;
+    });
+
+    // Set initial revenue based on all months
+    document.getElementById("revenue").textContent = `₹${totalRevenue}`;
   } catch (error) {
     console.error("Error loading rooms:", error);
   }
