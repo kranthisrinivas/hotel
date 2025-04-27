@@ -71,12 +71,6 @@ form.addEventListener("submit", async (e) => {
     return;
   }
 
-  // Ensure the payment month is set correctly (default to current month and year if empty)
-  const now = new Date();
-  const currentPaymentMonth = paymentMonth || now.toLocaleString('default', { month: 'long', year: 'numeric' });
-  // Debug: Log the paymentMonth to check what is being passed
-  console.log("Payment Month:", paymentMonth);
-  console.log("Current Payment Month:", currentPaymentMonth);
 
   const data = {
     fields: {
@@ -89,7 +83,7 @@ form.addEventListener("submit", async (e) => {
       AmountPaid: amountPaid,
       Comments: comments,
       IDProofUrl: idProofUrl,
-      PaymentMonth: editingRecordId ? existingPaymentMonth : currentPaymentMonth, // <-- KEY FIX
+      PaymentMonth: paymentMonth, // <-- KEY FIX
     }
   };
 
