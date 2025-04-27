@@ -72,7 +72,8 @@ form.addEventListener("submit", async (e) => {
       if (response.ok) {
         alert("Room details updated successfully!");
         form.reset();
-        loadRooms();
+        removeHiddenRecordId(); // Important
+        await loadRooms(); // <-- Properly reload rooms
       } else {
         console.error("Airtable error during update:", await response.json());
       }
@@ -93,7 +94,7 @@ form.addEventListener("submit", async (e) => {
       if (response.ok) {
         alert("Room details added successfully!");
         form.reset();
-        loadRooms();
+        await loadRooms(); // <-- Properly reload rooms
       } else {
         console.error("Airtable error during add:", await response.json());
       }
@@ -203,11 +204,14 @@ async function editRoom(recordId) {
   form.amountPaid.value = record.AmountPaid || "";
   form.comments.value = record.Comments || "";
 
-  const hiddenInput = document.createElement("input");
-  hiddenInput.type = "hidden";
-  hiddenInput.name = "recordId";
+  let hiddenInput = form.querySelector("input[name='recordId']");
+  if (!hiddenInput) {
+    hiddenInput = document.createElement("input");
+    hiddenInput.type = "hidden";
+    hiddenInput.name = "recordId";
+    form.appendChild(hiddenInput);
+  }
   hiddenInput.value = recordId;
-  form.appendChild(hiddenInput);
 }
 
 async function deleteRoom(recordId) {
@@ -220,7 +224,7 @@ async function deleteRoom(recordId) {
 
   if (response.ok) {
     alert("Room deleted successfully!");
-    loadRooms();
+    await loadRooms();
   } else {
     console.error("Error deleting room:", await response.json());
   }
@@ -229,6 +233,13 @@ async function deleteRoom(recordId) {
 function logout() {
   localStorage.removeItem("isAdminLoggedIn");
   window.location.href = "login.html";
+}
+
+function removeHiddenRecordId() {
+  const hiddenInput = form.querySelector("input[name='recordId']");
+  if (hiddenInput) {
+    hiddenInput.remove();
+  }
 }
 
 // Load data when page loads
