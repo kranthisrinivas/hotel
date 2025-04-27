@@ -264,17 +264,26 @@ async function loadRooms() {
     document.getElementById("totalRevenue").textContent = `₹${totalRevenue}`;
      // Function to update displayed revenue based on selected month
     monthSelector.addEventListener('change', function() {
-      const selectedMonth = monthSelector.value;
+  const selectedMonth = monthSelector.value;
 
-      // Filter revenue by the selected month
-      const filteredRevenue = selectedMonth ? revenueByMonth[selectedMonth] : totalRevenue;
+  // Filter the table rows based on the selected month
+  const rows = document.querySelectorAll("#roomsTable tbody tr");
+  rows.forEach(row => {
+    const paymentMonth = row.cells[7].textContent; // The Payment Month is in the 8th column
+    if (selectedMonth === "" || paymentMonth === selectedMonth) {
+      row.style.display = ""; // Show row
+    } else {
+      row.style.display = "none"; // Hide row
+    }
+  });
 
-      // Display the filtered revenue
-      document.getElementById("revenue").textContent = `₹${filteredRevenue}`;
-    });
+  // Filter revenue based on the selected month
+  const filteredRevenue = selectedMonth ? revenueByMonth[selectedMonth] : totalRevenue;
 
-    // Set initial revenue based on all months
-    document.getElementById("revenue").textContent = `₹${totalRevenue}`;
+  // Display the filtered revenue
+  document.getElementById("revenue").textContent = `₹${filteredRevenue}`;
+});
+
   } catch (error) {
     console.error("Error loading rooms:", error);
   }
