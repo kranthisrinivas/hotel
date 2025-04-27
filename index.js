@@ -37,6 +37,7 @@ form.addEventListener("submit", async (e) => {
   const amountPaid = parseFloat(form.amountPaid.value);
   const comments = form.comments.value;
   const idProofFile = form.idProof.files[0];
+  const paymentMonth = form.paymentMonth.value; // Get the payment month from the input
 
   let idProofUrl = existingIdProofUrl; // Default to existing
 
@@ -64,8 +65,9 @@ form.addEventListener("submit", async (e) => {
     return;
   }
 
+  // Ensure the payment month is set correctly (default to current month and year if empty)
   const now = new Date();
-  const currentPaymentMonth = now.toLocaleString('default', { month: 'long', year: 'numeric' });
+  const currentPaymentMonth = paymentMonth || now.toLocaleString('default', { month: 'long', year: 'numeric' });
 
   const data = {
     fields: {
