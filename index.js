@@ -168,3 +168,106 @@ function removeHiddenRecordId() {
     hiddenInput.remove();
   }
 }
+const airtableBaseUrl = "https://api.airtable.com/v0/appY6ucd2CU1tr5AH/Rooms";
+const airtableApiKey = "pat9VLsxcOkP4PdEy.6730536908ce848e0ccc8517889828b0e427bc3612eab0777e14899f0f61d04b";
+
+async function loadRooms() {
+  const tableBody = document.querySelector("#roomsTable tbody");
+  tableBody.innerHTML = ""; // Clear old table rows
+
+  let occupiedBedsCount = 0;
+  let totalRevenue = 0;
+
+  try {
+    const response = await fetch(airtableBaseUrl, {
+      headers: {
+        Authorization: `Bearer ${airtableApiKey}`,
+      },
+    });
+    const data = await response.json();
+
+    data.records.forEach(record => {
+      const fields = record.fields;
+
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${fields.RoomNumber || ""}</td>
+        <td>${fields.BedNumber || ""}</td>
+        <td>${fields.TenantName || ""}</td>
+        <td>${fields.PhoneNumber || ""}</td>
+        <td>${fields.PaymentMade || ""}</td>
+        <td>${fields.PaymentMethod || ""}</td>
+        <td>₹${fields.AmountPaid || 0}</td>
+        <td>
+          ${fields.IDProofUrl ? `<a href="${fields.IDProofUrl}" target="_blank">View</a>` : ""}
+        </td>
+        <td>${fields.Comments || ""}</td>
+        <td class="action-btns">
+          <button class="edit-btn" onclick="editRoom('${record.id}')">Edit</button>
+          <button class="delete-btn" onclick="deleteRoom('${record.id}')">Delete</button>
+        </td>
+      `;
+      tableBody.appendChild(row);
+
+      // Counting occupied beds and revenue
+      if (fields.TenantName) {
+        occupiedBedsCount += 1;
+      }
+      if (fields.PaymentMade === "Yes" && fields.AmountPaid) {
+        totalRevenue += fields.AmountPaid;
+      }
+    });
+
+    // Update dashboard stats
+    document.getElementById("occupiedBeds").textContent = occupiedBedsCount;
+    document.getElementById("revenue").textContent = `₹${totalRevenue}`;
+    document.getElementById("totalRevenue").textContent = `₹${totalRevenue}`;
+
+  } catch (error) {
+    console.error("Error loading rooms:", error);
+  }
+}
+
+async function deleteRoom(recordId) {
+  const confirmDelete = confirm("Are you sure you want to delete this room?");
+  if (!confirmDelete) return;
+
+  try {
+    const response = await fetch(`${airtableBaseUrl}/${recordId}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${airtableApiKey}`,
+      },
+    });
+
+    if (response.ok) {
+      showToast("✅ Room deleted successfully!");
+      await loadRooms(); // Refresh table
+    } else {
+      console.error("Failed to delete:", await response.json());
+    }
+  } catch (error) {
+    console.error("Error deleting room:", error);
+  }
+}
+
+// Dummy function for editRoom (you can build later)
+function editRoom(recordId) {
+  alert(`Edit function for record ID: ${recordId} not implemented yet.`);
+}
+
+// Simple toast message
+function showToast(message) {
+  const toast = document.createElement("div");
+  toast.className = "toast";
+  toast.innerText = message;
+  document.body.appendChild(toast);
+
+  setTimeout(() => {
+    toast.remove();
+  }, 3000);
+}
+
+// Load rooms when page loads
+window.addEventListener("DOMContentLoaded", loadRooms);
+
