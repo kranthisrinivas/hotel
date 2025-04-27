@@ -74,6 +74,9 @@ form.addEventListener("submit", async (e) => {
   // Ensure the payment month is set correctly (default to current month and year if empty)
   const now = new Date();
   const currentPaymentMonth = paymentMonth || now.toLocaleString('default', { month: 'long', year: 'numeric' });
+  // Debug: Log the paymentMonth to check what is being passed
+  console.log("Payment Month:", paymentMonth);
+  console.log("Current Payment Month:", currentPaymentMonth);
 
   const data = {
     fields: {
