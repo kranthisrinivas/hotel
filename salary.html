@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Employee Salary Management</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f9fafb;
+      margin: 0;
+      padding: 0;
+      color: #1f2937;
+    }
+    .container {
+      max-width: 600px;
+      margin: 50px auto;
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    form {
+      display: grid;
+      gap: 15px;
+    }
+    input, button {
+      padding: 10px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 16px;
+    }
+    button {
+      background-color: #4f46e5;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #4338ca;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>Employee Salary Form</h1>
+  <form id="salaryForm">
+    <input type="text" name="employeeName" placeholder="Employee Name" required />
+    <input type="text" name="position" placeholder="Position" required />
+    <input type="number" name="workingHours" placeholder="Working Hours" required />
+    <input type="number" name="leaves" placeholder="Leaves Taken" required />
+    <input type="number" name="advance" placeholder="Advance Paid" required />
+    <input type="number" name="salary" placeholder="Final Salary" required />
+    <button type="submit">Submit</button>
+  </form>
+</div>
+
+<script>
+  document.getElementById('salaryForm').addEventListener('submit', function(event) {
+    event.preventDefault();
+    const formData = new FormData(event.target);
+    const data = Object.fromEntries(formData.entries());
+    console.log('Salary Data Submitted:', data);
+    alert('Salary Data Submitted!');
+    event.target.reset();
+  });
+</script>
+
+</body>
+</html>
