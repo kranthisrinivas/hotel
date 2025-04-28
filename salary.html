@@ -29,7 +29,7 @@
       gap: 15px;
       margin-bottom: 30px;
     }
-    input, button {
+    input, select, button {
       padding: 10px;
       border: 1px solid #d1d5db;
       border-radius: 6px;
@@ -81,6 +81,31 @@
 <div class="container">
   <h1>Employee Salary Form</h1>
 
+  <!-- Total Salary Paid Section -->
+  <div id="totalSalary" style="font-size: 18px; margin-bottom: 20px;">
+    <strong>Total Salary Paid: </strong><span id="totalSalaryValue">0</span>
+  </div>
+
+  <!-- Filter by Month Section -->
+  <div style="margin-bottom: 20px;">
+    <label for="monthFilter">Filter by Month:</label>
+    <select id="monthFilter" onchange="filterByMonth()">
+      <option value="">All</option>
+      <option value="January">January</option>
+      <option value="February">February</option>
+      <option value="March">March</option>
+      <option value="April">April</option>
+      <option value="May">May</option>
+      <option value="June">June</option>
+      <option value="July">July</option>
+      <option value="August">August</option>
+      <option value="September">September</option>
+      <option value="October">October</option>
+      <option value="November">November</option>
+      <option value="December">December</option>
+    </select>
+  </div>
+
   <form id="salaryForm">
     <input type="text" name="employeeName" placeholder="Employee Name" required />
     <input type="text" name="position" placeholder="Position" required />
@@ -88,6 +113,22 @@
     <input type="number" name="leaves" placeholder="Leaves Taken" required />
     <input type="number" name="advance" placeholder="Advance Paid" required />
     <input type="number" name="salary" placeholder="Final Salary" required />
+    <!-- Add Payment Month Dropdown -->
+    <select name="paymentMonth" required>
+      <option value="">Select Payment Month</option>
+      <option value="January">January</option>
+      <option value="February">February</option>
+      <option value="March">March</option>
+      <option value="April">April</option>
+      <option value="May">May</option>
+      <option value="June">June</option>
+      <option value="July">July</option>
+      <option value="August">August</option>
+      <option value="September">September</option>
+      <option value="October">October</option>
+      <option value="November">November</option>
+      <option value="December">December</option>
+    </select>
     <button type="submit">Submit</button>
   </form>
 
@@ -101,6 +142,7 @@
         <th>Leaves</th>
         <th>Advance</th>
         <th>Salary</th>
+        <th>Month</th>
         <th>Actions</th>
       </tr>
     </thead>
@@ -147,7 +189,8 @@ function addRecordToAirtable(data) {
         WorkingHours: parseInt(data.workingHours),
         Leaves: parseInt(data.leaves),
         Advance: parseInt(data.advance),
-        Salary: parseInt(data.salary)
+        Salary: parseInt(data.salary),
+        PaymentMonth: data.paymentMonth
       }
     })
   })
@@ -172,6 +215,7 @@ function displayRecord(record) {
     <td>${record.fields.Leaves}</td>
     <td>${record.fields.Advance}</td>
     <td>${record.fields.Salary}</td>
+    <td>${record.fields.PaymentMonth}</td>
     <td>
       <button class="action-btn edit-btn" onclick="editRow('${record.id}', this)">Edit</button>
       <button class="action-btn delete-btn" onclick="deleteRow('${record.id}', this)">Delete</button>
@@ -179,6 +223,7 @@ function displayRecord(record) {
   `;
 
   tableBody.appendChild(row);
+  updateTotalSalary();
 }
 
 function editRow(recordId, button) {
@@ -191,6 +236,7 @@ function editRow(recordId, button) {
   document.querySelector('input[name="leaves"]').value = cells[3].innerText;
   document.querySelector('input[name="advance"]').value = cells[4].innerText;
   document.querySelector('input[name="salary"]').value = cells[5].innerText;
+  document.querySelector('select[name="paymentMonth"]').value = cells[6].innerText;
 
   editRecordId = recordId;
 }
@@ -209,7 +255,8 @@ function updateRecordInAirtable(data) {
         WorkingHours: parseInt(data.workingHours),
         Leaves: parseInt(data.leaves),
         Advance: parseInt(data.advance),
-        Salary: parseInt(data.salary)
+        Salary: parseInt(data.salary),
+        PaymentMonth: data.paymentMonth
       }
     })
   })
@@ -224,10 +271,12 @@ function updateRecordInAirtable(data) {
         row.children[3].innerText = updatedRecord.fields.Leaves;
         row.children[4].innerText = updatedRecord.fields.Advance;
         row.children[5].innerText = updatedRecord.fields.Salary;
+        row.children[6].innerText = updatedRecord.fields.PaymentMonth;
       }
     });
 
     editRecordId = null;
+    updateTotalSalary();
   })
   .catch(error => {
     console.error('Error updating record:', error);
@@ -244,11 +293,37 @@ function deleteRow(recordId, button) {
     })
     .then(() => {
       button.parentElement.parentElement.remove();
+      updateTotalSalary();
     })
     .catch(error => {
       console.error('Error deleting record:', error);
     });
   }
+}
+
+function filterByMonth() {
+  const selectedMonth = document.getElementById('monthFilter').value;
+
+  // Filter the rows based on the selected month
+  const rows = document.querySelectorAll('#salaryTable tbody tr');
+  rows.forEach(row => {
+    const monthCell = row.children[6].innerText;
+    if (selectedMonth && monthCell !== selectedMonth) {
+      row.style.display = 'none';
+    } else {
+      row.style.display = '';
+    }
+  });
+}
+
+function updateTotalSalary() {
+  const rows = document.querySelectorAll('#salaryTable tbody tr');
+  let totalSalary = 0;
+  rows.forEach(row => {
+    totalSalary += parseInt(row.children[5].innerText) || 0;
+  });
+
+  document.getElementById('totalSalaryValue').innerText = totalSalary;
 }
 
 // Load existing salary records when page loads
@@ -269,9 +344,6 @@ window.onload = function() {
   });
 };
 </script>
-
-
-
 
 </body>
 </html>
