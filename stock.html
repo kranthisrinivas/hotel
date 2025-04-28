@@ -169,7 +169,7 @@ function addItemToAirtable(data) {
         Quantity: parseInt(data.quantity),
         PricePerUnit: parseFloat(data.pricePerUnit),
         Category: data.category || '',
-        Supplier: data.supplier || ''
+        Supplier: data.supplier || '',
         Date: data.date // Include the date
       }
     })
@@ -198,7 +198,7 @@ function displayRecord(record) {
     <td>${record.fields.Quantity}</td>
     <td>${record.fields.PricePerUnit}</td>
     <td>${totalValue}</td>
-    <td>${month}</td> <!-- Display the Month -->
+    <td>${record.fields.Date}</td> <!-- Show Date here -->
     <td>
       <button class="action-btn edit-btn" onclick="editRow('${record.id}', this)">Edit</button>
       <button class="action-btn delete-btn" onclick="deleteRow('${record.id}', this)">Delete</button>
