@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Employee Salary Management</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<nav style="background-color: #4f46e5; padding: 15px; text-align: center;">
+  <a href="index.html" style="color: white; margin: 0 15px;">Home</a>
+  <a href="stock.html" style="color: white; margin: 0 15px;">Stock</a>
+  <a href="salary.html" style="color: white; margin: 0 15px;">Salary</a>
+</nav>
+
+<div class="container">
+  <h1>Employee Salary Form</h1>
+
+  <div id="totalSalary"><strong>Total Salary Paid: </strong><span id="totalSalaryValue">0</span></div>
+
+  <div style="margin-bottom: 20px;">
+    <label for="monthFilter">Filter by Month:</label>
+    <select id="monthFilter">
+      <option value="">All</option>
+      <option value="January">January</option>
+      <option value="February">February</option>
+      <option value="March">March</option>
+      <option value="April">April</option>
+      <option value="May">May</option>
+      <option value="June">June</option>
+      <option value="July">July</option>
+      <option value="August">August</option>
+      <option value="September">September</option>
+      <option value="October">October</option>
+      <option value="November">November</option>
+      <option value="December">December</option>
+    </select>
+  </div>
+
+  <form id="salaryForm">
+    <input type="text" name="employeeName" placeholder="Employee Name" required>
+    <input type="text" name="position" placeholder="Position" required>
+    <input type="number" name="workingHours" placeholder="Working Hours" required>
+    <input type="number" name="leaves" placeholder="Leaves Taken" required>
+    <input type="number" name="advance" placeholder="Advance Paid" required>
+    <input type="number" name="salary" placeholder="Final Salary" required>
+    <select name="paymentMonth" required>
+      <option value="">Select Payment Month</option>
+      <option value="January">January</option>
+      <option value="February">February</option>
+      <option value="March">March</option>
+      <option value="April">April</option>
+      <option value="May">May</option>
+      <option value="June">June</option>
+      <option value="July">July</option>
+      <option value="August">August</option>
+      <option value="September">September</option>
+      <option value="October">October</option>
+      <option value="November">November</option>
+      <option value="December">December</option>
+    </select>
+    <button type="submit">Submit</button>
+  </form>
+
+  <h2>Submitted Salary Records</h2>
+  <table id="salaryTable">
+    <thead>
+      <tr>
+        <th>Employee</th>
+        <th>Position</th>
+        <th>Working Hours</th>
+        <th>Leaves</th>
+        <th>Advance</th>
+        <th>Salary</th>
+        <th>Month</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+</div>
+
+<script>
+  // Airtable details
+const airtableApiKey = 'YOUR_API_KEY';
+const airtableBaseId = 'YOUR_BASE_ID';
+const airtableTableName = 'EmployeeSalaries';
+
+let editRecordId = null;
+
+const salaryForm = document.getElementById('salaryForm');
+const salaryTableBody = document.querySelector('#salaryTable tbody');
+const monthFilter = document.getElementById('monthFilter');
+
+// Form Submit
+salaryForm.addEventListener('submit', function(event) {
+  event.preventDefault();
+  const formData = new FormData(salaryForm);
+  const data = Object.fromEntries(formData.entries());
+
+  if (editRecordId === null) {
+    addRecord(data);
+  } else {
+    updateRecord(data);
+  }
+  salaryForm.reset();
+});
+
+// Add Record
+function addRecord(data) {
+  fetch(`https://api.airtable.com/v0/${airtableBaseId}/${airtableTableName}`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${airtableApiKey}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ fields: formatFields(data) })
+  })
+  .then(res => res.json())
+  .then(record => displayRecord(record))
+  .catch(err => console.error('Add Error:', err));
+}
+
+// Display Record
+function displayRecord(record) {
+  const row = document.createElement('tr');
+  row.dataset.id = record.id;
+  row.innerHTML = `
+    <td>${record.fields.EmployeeName}</td>
+    <td>${record.fields.Position}</td>
+    <td>${record.fields.WorkingHours}</td>
+    <td>${record.fields.Leaves}</td>
+    <td>${record.fields.Advance}</td>
+    <td>${record.fields.Salary}</td>
+    <td>${record.fields.PaymentMonth}</td>
+    <td>
+      <button onclick="editRow('${record.id}', this)">Edit</button>
+      <button onclick="deleteRow('${record.id}', this)">Delete</button>
+    </td>
+  `;
+  salaryTableBody.appendChild(row);
+  updateTotalSalary();
+}
+
+// Format fields
+function formatFields(data) {
+  return {
+    EmployeeName: data.employeeName,
+    Position: data.position,
+    WorkingHours: parseInt(data.workingHours),
+    Leaves: parseInt(data.leaves),
+    Advance: parseInt(data.advance),
+    Salary: parseInt(data.salary),
+    PaymentMonth: data.paymentMonth
+  };
+}
+
+// Edit Row
+function editRow(id, btn) {
+  const row = btn.closest('tr').children;
+  salaryForm.employeeName.value = row[0].innerText;
+  salaryForm.position.value = row[1].innerText;
+  salaryForm.workingHours.value = row[2].innerText;
+  salaryForm.leaves.value = row[3].innerText;
+  salaryForm.advance.value = row[4].innerText;
+  salaryForm.salary.value = row[5].innerText;
+  salaryForm.paymentMonth.value = row[6].innerText;
+
+  editRecordId = id;
+}
+
+// Update Record
+function updateRecord(data) {
+  fetch(`https://api.airtable.com/v0/${airtableBaseId}/${airtableTableName}/${editRecordId}`, {
+    method: 'PATCH',
+    headers: {
+      'Authorization': `Bearer ${airtableApiKey}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ fields: formatFields(data) })
+  })
+  .then(res => res.json())
+  .then(record => {
+    const row = document.querySelector(`tr[data-id="${editRecordId}"]`).children;
+    row[0].innerText = record.fields.EmployeeName;
+    row[1].innerText = record.fields.Position;
+    row[2].innerText = record.fields.WorkingHours;
+    row[3].innerText = record.fields.Leaves;
+    row[4].innerText = record.fields.Advance;
+    row[5].innerText = record.fields.Salary;
+    row[6].innerText = record.fields.PaymentMonth;
+    editRecordId = null;
+    updateTotalSalary();
+  })
+  .catch(err => console.error('Update Error:', err));
+}
+
+// Delete Row
+function deleteRow(id, btn) {
+  if (confirm('Are you sure you want to delete?')) {
+    fetch(`https://api.airtable.com/v0/${airtableBaseId}/${airtableTableName}/${id}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${airtableApiKey}` }
+    })
+    .then(() => {
+      btn.closest('tr').remove();
+      updateTotalSalary();
+    })
+    .catch(err => console.error('Delete Error:', err));
+  }
+}
+
+// Filter by Month
+monthFilter.addEventListener('change', filterByMonth);
+
+function filterByMonth() {
+  const selectedMonth = monthFilter.value;
+  const rows = salaryTableBody.querySelectorAll('tr');
+
+  rows.forEach(row => {
+    const month = row.children[6].innerText;
+    if (!selectedMonth || month === selectedMonth) {
+      row.style.display = '';
+    } else {
+      row.style.display = 'none';
+    }
+  });
+  updateTotalSalary();
+}
+
+// Update Total Salary
+function updateTotalSalary() {
+  const selectedMonth = monthFilter.value;
+  const rows = salaryTableBody.querySelectorAll('tr');
+  let total = 0;
+
+  rows.forEach(row => {
+    const salary = parseInt(row.children[5].innerText) || 0;
+    const month = row.children[6].innerText;
+
+    if (!selectedMonth || month === selectedMonth) {
+      total += salary;
+    }
+  });
+
+  document.getElementById('totalSalaryValue').innerText = total;
+}
+
+// Load existing records
+window.onload = function() {
+  fetch(`https://api.airtable.com/v0/${airtableBaseId}/${airtableTableName}`, {
+    headers: { 'Authorization': `Bearer ${airtableApiKey}` }
+  })
+  .then(res => res.json())
+  .then(data => {
+    data.records.forEach(record => displayRecord(record));
+  })
+  .catch(err => console.error('Load Error:', err));
+}
+
+</script>
+
+</body>
+</html>
