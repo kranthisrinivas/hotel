@@ -1,12 +1,11 @@
 const form = document.getElementById("manageRoomsForm");
-let existingIdProofUrl = ""; // Track existing ID proof
-let editingRecordId = null; // Track if editing
-let existingPaymentMonth = ""; // Track existing Payment Month
+const monthSelector = document.getElementById("monthSelector");
+let existingIdProofUrl = "";
+let editingRecordId = null;
 
 const airtableBaseUrl = "https://api.airtable.com/v0/appY6ucd2CU1tr5AH/Rooms";
 const airtableApiKey = "pat9VLsxcOkP4PdEy.6730536908ce848e0ccc8517889828b0e427bc3612eab0777e14899f0f61d04b";
 
-// Show Toast
 function showToast(message) {
   const toast = document.getElementById("toast");
   toast.textContent = message;
@@ -16,15 +15,11 @@ function showToast(message) {
   }, 2000);
 }
 
-// Remove hidden record ID
 function removeHiddenRecordId() {
   editingRecordId = null;
-  existingPaymentMonth = ""; // Reset payment month
   form.querySelector("input[name='recordId']")?.remove();
-  document.getElementById("submitBtn").innerText = "Add Room"; // Reset button text
 }
 
-// Submit form
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
 
@@ -36,13 +31,12 @@ form.addEventListener("submit", async (e) => {
   const paymentMethod = form.paymentMethod.value;
   const amountPaid = parseFloat(form.amountPaid.value);
   const comments = form.comments.value;
+  const paymentMonth = form.paymentMonth.value;
   const idProofFile = form.idProof.files[0];
-  const paymentMonth = form.paymentMonth.value; // Get the payment month from the input
 
-  let idProofUrl = existingIdProofUrl; // Default to existing
+  let idProofUrl = existingIdProofUrl;
 
-  // Validate required fields
-  if (!roomNumber || !bedNumber || !tenantName || !phoneNumber || !amountPaid || !paymentMade || !paymentMethod || !paymentMonth) {
+  if (!roomNumber || !bedNumber || !tenantName || !phoneNumber || !paymentMade || !paymentMethod || !paymentMonth || isNaN(amountPaid)) {
     alert("Please fill out all required fields.");
     return;
   }
@@ -51,7 +45,6 @@ form.addEventListener("submit", async (e) => {
     const cloudinaryData = new FormData();
     cloudinaryData.append('file', idProofFile);
     cloudinaryData.append('upload_preset', 'pg-hostel-idproof');
-
     try {
       const cloudinaryRes = await fetch(`https://api.cloudinary.com/v1_1/dudx9anuk/upload`, {
         method: 'POST',
@@ -71,7 +64,6 @@ form.addEventListener("submit", async (e) => {
     return;
   }
 
-
   const data = {
     fields: {
       RoomNumber: roomNumber,
@@ -83,7 +75,7 @@ form.addEventListener("submit", async (e) => {
       AmountPaid: amountPaid,
       Comments: comments,
       IDProofUrl: idProofUrl,
-      PaymentMonth: paymentMonth, // <-- KEY FIX
+      PaymentMonth: paymentMonth,
     }
   };
 
@@ -115,13 +107,10 @@ form.addEventListener("submit", async (e) => {
   }
 });
 
-// Load existing data into form for edit
 async function editRoom(recordId) {
   try {
     const response = await fetch(`${airtableBaseUrl}/${recordId}`, {
-      headers: {
-        Authorization: `Bearer ${airtableApiKey}`,
-      },
+      headers: { Authorization: `Bearer ${airtableApiKey}` },
     });
     const data = await response.json();
     const record = data.fields;
@@ -134,23 +123,17 @@ async function editRoom(recordId) {
     form.paymentMethod.value = record.PaymentMethod || "";
     form.amountPaid.value = record.AmountPaid || "";
     form.comments.value = record.Comments || "";
-    form.paymentMonth.value = record.PaymentMonth || ""; // <-- Set existing payment month
+    form.paymentMonth.value = record.PaymentMonth || "";
 
     existingIdProofUrl = record.IDProofUrl || "";
-    existingPaymentMonth = record.PaymentMonth || ""; // <-- Save existing payment month
 
     const idProofPreview = document.getElementById("existingIdProofPreview");
-    if (existingIdProofUrl) {
-      idProofPreview.innerHTML = `
-        <a href="${existingIdProofUrl}" target="_blank">
+    idProofPreview.innerHTML = existingIdProofUrl
+      ? `<a href="${existingIdProofUrl}" target="_blank">
           <img src="${existingIdProofUrl}" alt="Existing ID Proof" style="width: 100px; height: auto; margin-top: 8px; border: 1px solid #ccc; padding: 4px;">
-        </a>
-      `;
-    } else {
-      idProofPreview.innerHTML = "";
-    }
+        </a>`
+      : "";
 
-    // Set recordId hidden input
     let hiddenInput = form.querySelector("input[name='recordId']");
     if (!hiddenInput) {
       hiddenInput = document.createElement("input");
@@ -161,23 +144,18 @@ async function editRoom(recordId) {
     hiddenInput.value = recordId;
 
     editingRecordId = recordId;
-    document.getElementById("submitBtn").innerText = "Update Room"; // Change button text
   } catch (error) {
     console.error("Error loading room for edit:", error);
   }
 }
 
-// Delete room
 async function deleteRoom(recordId) {
-  const confirmDelete = confirm("Are you sure you want to delete this room?");
-  if (!confirmDelete) return;
+  if (!confirm("Are you sure you want to delete this room?")) return;
 
   try {
     const response = await fetch(`${airtableBaseUrl}/${recordId}`, {
       method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${airtableApiKey}`,
-      },
+      headers: { Authorization: `Bearer ${airtableApiKey}` },
     });
 
     if (response.ok) {
@@ -191,107 +169,92 @@ async function deleteRoom(recordId) {
   }
 }
 
-// Load all rooms
 async function loadRooms() {
   const tableBody = document.querySelector("#roomsTable tbody");
   tableBody.innerHTML = "";
 
   let occupiedBedsCount = 0;
   let totalRevenue = 0;
-  const revenueByMonth = {};  // Object to store revenue by month
-  const months = new Set();  // Set to hold unique payment months
+  const monthRevenue = {};
+
+  const selectedMonth = monthSelector.value; // Month filter
 
   try {
     const response = await fetch(airtableBaseUrl, {
-      headers: {
-        Authorization: `Bearer ${airtableApiKey}`,
-      },
+      headers: { Authorization: `Bearer ${airtableApiKey}` },
     });
     const data = await response.json();
+    const paymentMonths = new Set();
+
     data.records.forEach(record => {
       const fields = record.fields;
-      const paymentMonth = fields.PaymentMonth || "Unknown";  // Default to "Unknown" if no month
+      const paymentMonth = fields.PaymentMonth || "Unknown";
 
-      // Update revenue by month
-      if (!revenueByMonth[paymentMonth]) {
-        revenueByMonth[paymentMonth] = 0;
-      }
       if (fields.PaymentMade === "Yes" && fields.AmountPaid) {
-        revenueByMonth[paymentMonth] += fields.AmountPaid;
+        if (!monthRevenue[paymentMonth]) {
+          monthRevenue[paymentMonth] = 0;
+        }
+        monthRevenue[paymentMonth] += fields.AmountPaid;
       }
 
-      // Add month to the set
-      months.add(paymentMonth);
+      paymentMonths.add(paymentMonth);
 
-      const row = document.createElement("tr");
-      row.innerHTML = `
-        <td>${fields.RoomNumber || ""}</td>
-        <td>${fields.BedNumber || ""}</td>
-        <td>${fields.TenantName || ""}</td>
-        <td>${fields.PhoneNumber || ""}</td>
-        <td>${fields.PaymentMade || ""}</td>
-        <td>${fields.PaymentMethod || ""}</td>
-        <td>₹${fields.AmountPaid || 0}</td>
-        <td>${fields.PaymentMonth || ""}</td>
-        <td>${fields.IDProofUrl ? `<a href="${fields.IDProofUrl}" target="_blank">View</a>` : ""}</td>
-        <td>${fields.Comments || ""}</td>
-        <td class="action-btns">
-          <button class="edit-btn" onclick="editRoom('${record.id}')">Edit</button>
-          <button class="delete-btn" onclick="deleteRoom('${record.id}')">Delete</button>
-        </td>
-      `;
-      tableBody.appendChild(row);
+      const shouldDisplay = !selectedMonth || selectedMonth === paymentMonth;
+      if (shouldDisplay) {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${fields.RoomNumber || ""}</td>
+          <td>${fields.BedNumber || ""}</td>
+          <td>${fields.TenantName || ""}</td>
+          <td>${fields.PhoneNumber || ""}</td>
+          <td>${fields.PaymentMade || ""}</td>
+          <td>${fields.PaymentMethod || ""}</td>
+          <td>₹${fields.AmountPaid || 0}</td>
+          <td>${fields.PaymentMonth || ""}</td>
+          <td>${fields.IDProofUrl ? `<a href="${fields.IDProofUrl}" target="_blank">View</a>` : ""}</td>
+          <td>${fields.Comments || ""}</td>
+          <td class="action-btns">
+            <button class="edit-btn" onclick="editRoom('${record.id}')">Edit</button>
+            <button class="delete-btn" onclick="deleteRoom('${record.id}')">Delete</button>
+          </td>
+        `;
+        tableBody.appendChild(row);
+      }
 
-      if (fields.TenantName) {
-        occupiedBedsCount += 1;
-      }
-      if (fields.PaymentMade === "Yes" && fields.AmountPaid) {
-        totalRevenue += fields.AmountPaid;
-      }
+      if (fields.TenantName) occupiedBedsCount += 1;
     });
-    
-    // Set revenue for all months in the monthSelector dropdown
-    const monthSelector = document.getElementById("monthSelector");
-    monthSelector.innerHTML = "<option value=''>All Months</option>"; // Reset the dropdown
-    months.forEach(month => {
+
+    const revenue = selectedMonth ? (monthRevenue[selectedMonth] || 0) : Object.values(monthRevenue).reduce((a, b) => a + b, 0);
+
+    document.getElementById("occupiedBeds").textContent = occupiedBedsCount;
+    document.getElementById("revenue").textContent = `₹${revenue}`;
+    document.getElementById("totalRevenue").textContent = `₹${Object.values(monthRevenue).reduce((a, b) => a + b, 0)}`;
+
+    // Populate month selector dynamically
+    monthSelector.innerHTML = `<option value="">All Months</option>`;
+    [...paymentMonths].forEach(month => {
       const option = document.createElement("option");
       option.value = month;
       option.textContent = month;
+      if (month === selectedMonth) {
+        option.selected = true;
+      }
       monthSelector.appendChild(option);
     });
-
-    document.getElementById("occupiedBeds").textContent = occupiedBedsCount;
-    document.getElementById("totalRevenue").textContent = `₹${totalRevenue}`;
-     // Function to update displayed revenue based on selected month
-    monthSelector.addEventListener('change', function() {
-  const selectedMonth = monthSelector.value;
-
-  // Filter the table rows based on the selected month
-  const rows = document.querySelectorAll("#roomsTable tbody tr");
-  rows.forEach(row => {
-    const paymentMonth = row.cells[7].textContent; // The Payment Month is in the 8th column
-    if (selectedMonth === "" || paymentMonth === selectedMonth) {
-      row.style.display = ""; // Show row
-    } else {
-      row.style.display = "none"; // Hide row
-    }
-  });
-
-  // Filter revenue based on the selected month
-  const filteredRevenue = selectedMonth ? revenueByMonth[selectedMonth] : totalRevenue;
-
-  // Display the filtered revenue
-  document.getElementById("revenue").textContent = `₹${filteredRevenue}`;
-});
 
   } catch (error) {
     console.error("Error loading rooms:", error);
   }
 }
 
-document.getElementById('logoutBtn').addEventListener('click', function() {
-  window.location.href = "https://kranthisrinivas.github.io/hotel/login.html"; 
-});
+// Month selector onchange
+monthSelector.addEventListener("change", loadRooms);
 
-// Load rooms on page load
-window.addEventListener("DOMContentLoaded", loadRooms);
+// Initial Load
+loadRooms();
+
+// Logout
+document.getElementById("logoutBtn").addEventListener("click", function() {
+  localStorage.removeItem("isAdminLoggedIn");
+  window.location.href = "login.html";
+});
