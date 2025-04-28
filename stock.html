@@ -261,7 +261,8 @@ function updateItemInAirtable(data) {
   const rows = document.querySelectorAll('#stockTable tbody tr');
 
   rows.forEach(row => {
-    const monthCell = row.children[4].innerText; // The month is in the 5th cell (index 4)
+    const monthCell = row.children[3].innerText; // The month is in the 5th cell (index 4)
+    const month = new Date(dateText).toLocaleString('default', { month: 'long' });
     if (selectedMonth && monthCell !== selectedMonth) {
       row.style.display = 'none'; // Hide rows that don't match the selected month
     } else {
