@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Stock Management</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f9fafb;
+      margin: 0;
+      padding: 0;
+      color: #1f2937;
+    }
+    .container {
+      max-width: 800px;
+      margin: 50px auto;
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    form {
+      display: grid;
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+    input, select, button {
+      padding: 10px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 16px;
+    }
+    button {
+      background-color: #4f46e5;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #4338ca;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background-color: white;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    }
+    th, td {
+      padding: 10px 12px;
+      border-bottom: 1px solid #ddd;
+      text-align: left;
+    }
+    th {
+      background-color: #f3f4f6;
+    }
+    .action-btn {
+      padding: 5px 10px;
+      margin: 2px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .edit-btn {
+      background-color: #fbbf24;
+      color: black;
+    }
+    .delete-btn {
+      background-color: #ef4444;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>Stock Management</h1>
+
+  <!-- Total Stock Value Section -->
+  <div id="totalStockValue" style="font-size: 18px; margin-bottom: 20px;">
+    <strong>Total Stock Value: </strong><span id="totalStockValueAmount">0</span>
+  </div>
+
+  <form id="stockForm">
+    <input type="text" name="itemName" placeholder="Item Name" required />
+    <input type="number" name="quantity" placeholder="Quantity" required />
+    <input type="number" name="pricePerUnit" placeholder="Price per Unit" required />
+    <input type="text" name="category" placeholder="Category (Optional)" />
+    <input type="text" name="supplier" placeholder="Supplier Name (Optional)" />
+    <button type="submit">Add Item</button>
+  </form>
+
+  <h2>Stock Records</h2>
+  <table id="stockTable">
+    <thead>
+      <tr>
+        <th>Item Name</th>
+        <th>Quantity</th>
+        <th>Price per Unit</th>
+        <th>Total Value</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Stock records will appear here -->
+    </tbody>
+  </table>
+
+</div>
+
+<script>
+// Airtable setup
+const airtableApiKey = 'YOUR_API_KEY'; // 🔥 Replace with your Airtable API Key
+const airtableBaseId = 'YOUR_BASE_ID'; // 🔥 Replace with your Airtable Base ID
+const airtableTableName = 'Stock'; // 🔥 Table name must match exactly
+
+let editRecordId = null;
+
+document.getElementById('stockForm').addEventListener('submit', function(event) {
+  event.preventDefault();
+  const formData = new FormData(event.target);
+  const data = Object.fromEntries(formData.entries());
+
+  if (editRecordId === null) {
+    addItemToAirtable(data);
+  } else {
+    updateItemInAirtable(data);
+  }
+
+  event.target.reset();
+});
+
+function addItemToAirtable(data) {
+  fetch(`https://api.airtable.com/v0/${airtableBaseId}/${airtableTableName}`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${airtableApiKey}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      fields: {
+        ItemName: data.itemName,
+        Quantity: parseInt(data.quantity),
+        PricePerUnit: parseFloat(data.pricePerUnit),
+        Category: data.category || '',
+        Supplier: data.supplier || ''
+      }
+    })
+  })
+  .then(response => response.json())
+  .then(record => {
+    displayRecord(record);
+    updateTotalStockValue();
+  })
+  .catch(error => {
+    console.error('Error adding record:', error);
+  });
+}
+
+function displayRecord(record) {
+  const tableBody = document.querySelector('#stockTable tbody');
+  const row = document.createElement('tr');
+  row.setAttribute('data-id', record.id);
+
+  const totalValue = record.fields.Quantity * record.fields.PricePerUnit;
+
+  row.innerHTML = `
+    <td>${record.fields.ItemName}</td>
+    <td>${record.fields.Quantity}</td>
+    <td>${record.fields.PricePerUnit}</td>
+    <td>${totalValue}</td>
+    <td>
+      <button class="action-btn edit-btn" onclick="editRow('${record.id}', this)">Edit</button>
+      <button class="action-btn delete-btn" onclick="deleteRow('${record.id}', this)">Delete</button>
+    </td>
+  `;
+
+  tableBody.appendChild(row);
+}
+
+function editRow(recordId, button) {
+  const row = button.parentElement.parentElement;
+  const cells = row.querySelectorAll('td');
+
+  document.querySelector('input[name="itemName"]').value = cells[0].innerText;
+  document.querySelector('input[name="quantity"]').value = cells[1].innerText;
+  document.querySelector('input[name="pricePerUnit"]').value = cells[2].innerText;
+
+  editRecordId = recordId;
+}
+
+function updateItemInAirtable(data) {
+  fetch(`https://api.airtable.com/v0/${airtableBaseId}/${airtableTableName}/${editRecordId}`, {
+    method: 'PATCH',
+    headers: {
+      'Authorization': `Bearer ${airtableApiKey}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      fields: {
+        ItemName: data.itemName,
+        Quantity: parseInt(data.quantity),
+        PricePerUnit: parseFloat(data.pricePerUnit),
+        Category: data.category || '',
+        Supplier: data.supplier || ''
+      }
+    })
+  })
+  .then(response => response.json())
+  .then(updatedRecord => {
+    const rows = document.querySelectorAll('#stockTable tbody tr');
+    rows.forEach(row => {
+      if (row.getAttribute('data-id') === editRecordId) {
+        const totalValue = updatedRecord.fields.Quantity * updatedRecord.fields.PricePerUnit;
+        row.children[0].innerText = updatedRecord.fields.ItemName;
+        row.children[1].innerText = updatedRecord.fields.Quantity;
+        row.children[2].innerText = updatedRecord.fields.PricePerUnit;
+        row.children[3].innerText = totalValue;
+      }
+    });
+
+    editRecordId = null;
+    updateTotalStockValue();
+  })
+  .catch(error => {
+    console.error('Error updating record:', error);
+  });
+}
+
+function deleteRow(recordId, button) {
+  if (confirm('Are you sure you want to delete this record?')) {
+    fetch(`https://api.airtable.com/v0/${airtableBaseId}/${airtableTableName}/${recordId}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${airtableApiKey}`
+      }
+    })
+    .then(() => {
+      button.parentElement.parentElement.remove();
+      updateTotalStockValue();
+    })
+    .catch(error => {
+      console.error('Error deleting record:', error);
+    });
+  }
+}
+
+function updateTotalStockValue() {
+  const rows = document.querySelectorAll('#stockTable tbody tr');
+  let totalStockValue = 0;
+  rows.forEach(row => {
+    totalStockValue += parseInt(row.children[3].innerText) || 0;
+  });
+
+  document.getElementById('totalStockValueAmount').innerText = totalStockValue;
+}
+
+// Load existing stock records when page loads
+window.onload = function() {
+  fetch(`https://api.airtable.com/v0/${airtableBaseId}/${airtableTableName}`, {
+    headers: {
+      'Authorization': `Bearer ${airtableApiKey}`
+    }
+  })
+  .then(response => response.json())
+  .then(data => {
+    data.records.forEach(record => {
+      displayRecord(record);
+    });
+
+    // Initial total stock value calculation
+    updateTotalStockValue();
+  })
+  .catch(error => {
+    console.error('Error loading records:', error);
+  });
+};
+</script>
+
+</body>
+</html>
