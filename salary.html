@@ -112,43 +112,76 @@
 </div>
 
 <script>
-let editIndex = null;
+// Airtable setup
+const airtableApiKey = 'patcBSfFzcq2Wgqlr.74cea9beecf0c0f97d5432e11214516401519de4ca899bfe8054d4627bdefaa0'; // 🔥 Replace with your Airtable API Key
+const airtableBaseId = 'appnHLMNB06xYQnco'; // 🔥 Replace with your Airtable Base ID
+const airtableTableName = 'EmployeeSalaries'; // 🔥 Table name must match exactly
+
+let editRecordId = null;
 
 document.getElementById('salaryForm').addEventListener('submit', function(event) {
   event.preventDefault();
   const formData = new FormData(event.target);
   const data = Object.fromEntries(formData.entries());
 
-  if (editIndex === null) {
-    addRow(data);
+  if (editRecordId === null) {
+    addRecordToAirtable(data);
   } else {
-    updateRow(data);
+    updateRecordInAirtable(data);
   }
 
   event.target.reset();
 });
 
-function addRow(data) {
+function addRecordToAirtable(data) {
+  fetch(`https://api.airtable.com/v0/${airtableBaseId}/${airtableTableName}`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${airtableApiKey}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      fields: {
+        EmployeeName: data.employeeName,
+        Position: data.position,
+        WorkingHours: parseInt(data.workingHours),
+        Leaves: parseInt(data.leaves),
+        Advance: parseInt(data.advance),
+        Salary: parseInt(data.salary)
+      }
+    })
+  })
+  .then(response => response.json())
+  .then(record => {
+    displayRecord(record);
+  })
+  .catch(error => {
+    console.error('Error adding record:', error);
+  });
+}
+
+function displayRecord(record) {
   const tableBody = document.querySelector('#salaryTable tbody');
   const row = document.createElement('tr');
+  row.setAttribute('data-id', record.id);
 
   row.innerHTML = `
-    <td>${data.employeeName}</td>
-    <td>${data.position}</td>
-    <td>${data.workingHours}</td>
-    <td>${data.leaves}</td>
-    <td>${data.advance}</td>
-    <td>${data.salary}</td>
+    <td>${record.fields.EmployeeName}</td>
+    <td>${record.fields.Position}</td>
+    <td>${record.fields.WorkingHours}</td>
+    <td>${record.fields.Leaves}</td>
+    <td>${record.fields.Advance}</td>
+    <td>${record.fields.Salary}</td>
     <td>
-      <button class="action-btn edit-btn" onclick="editRow(this)">Edit</button>
-      <button class="action-btn delete-btn" onclick="deleteRow(this)">Delete</button>
+      <button class="action-btn edit-btn" onclick="editRow('${record.id}', this)">Edit</button>
+      <button class="action-btn delete-btn" onclick="deleteRow('${record.id}', this)">Delete</button>
     </td>
   `;
 
   tableBody.appendChild(row);
 }
 
-function editRow(button) {
+function editRow(recordId, button) {
   const row = button.parentElement.parentElement;
   const cells = row.querySelectorAll('td');
 
@@ -159,35 +192,86 @@ function editRow(button) {
   document.querySelector('input[name="advance"]').value = cells[4].innerText;
   document.querySelector('input[name="salary"]').value = cells[5].innerText;
 
-  editIndex = Array.from(row.parentElement.children).indexOf(row);
+  editRecordId = recordId;
 }
 
-function updateRow(data) {
-  const tableBody = document.querySelector('#salaryTable tbody');
-  const row = tableBody.children[editIndex];
+function updateRecordInAirtable(data) {
+  fetch(`https://api.airtable.com/v0/${airtableBaseId}/${airtableTableName}/${editRecordId}`, {
+    method: 'PATCH',
+    headers: {
+      'Authorization': `Bearer ${airtableApiKey}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      fields: {
+        EmployeeName: data.employeeName,
+        Position: data.position,
+        WorkingHours: parseInt(data.workingHours),
+        Leaves: parseInt(data.leaves),
+        Advance: parseInt(data.advance),
+        Salary: parseInt(data.salary)
+      }
+    })
+  })
+  .then(response => response.json())
+  .then(updatedRecord => {
+    const rows = document.querySelectorAll('#salaryTable tbody tr');
+    rows.forEach(row => {
+      if (row.getAttribute('data-id') === editRecordId) {
+        row.children[0].innerText = updatedRecord.fields.EmployeeName;
+        row.children[1].innerText = updatedRecord.fields.Position;
+        row.children[2].innerText = updatedRecord.fields.WorkingHours;
+        row.children[3].innerText = updatedRecord.fields.Leaves;
+        row.children[4].innerText = updatedRecord.fields.Advance;
+        row.children[5].innerText = updatedRecord.fields.Salary;
+      }
+    });
 
-  row.innerHTML = `
-    <td>${data.employeeName}</td>
-    <td>${data.position}</td>
-    <td>${data.workingHours}</td>
-    <td>${data.leaves}</td>
-    <td>${data.advance}</td>
-    <td>${data.salary}</td>
-    <td>
-      <button class="action-btn edit-btn" onclick="editRow(this)">Edit</button>
-      <button class="action-btn delete-btn" onclick="deleteRow(this)">Delete</button>
-    </td>
-  `;
-
-  editIndex = null;
+    editRecordId = null;
+  })
+  .catch(error => {
+    console.error('Error updating record:', error);
+  });
 }
 
-function deleteRow(button) {
+function deleteRow(recordId, button) {
   if (confirm('Are you sure you want to delete this record?')) {
-    button.parentElement.parentElement.remove();
+    fetch(`https://api.airtable.com/v0/${airtableBaseId}/${airtableTableName}/${recordId}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${airtableApiKey}`
+      }
+    })
+    .then(() => {
+      button.parentElement.parentElement.remove();
+    })
+    .catch(error => {
+      console.error('Error deleting record:', error);
+    });
   }
 }
+
+// Load existing salary records when page loads
+window.onload = function() {
+  fetch(`https://api.airtable.com/v0/${airtableBaseId}/${airtableTableName}`, {
+    headers: {
+      'Authorization': `Bearer ${airtableApiKey}`
+    }
+  })
+  .then(response => response.json())
+  .then(data => {
+    data.records.forEach(record => {
+      displayRecord(record);
+    });
+  })
+  .catch(error => {
+    console.error('Error loading records:', error);
+  });
+};
 </script>
+
+
+
 
 </body>
 </html>
