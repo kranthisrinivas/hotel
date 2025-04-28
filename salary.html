@@ -300,23 +300,7 @@ function deleteRow(recordId, button) {
     });
   }
 }
-
-function filterByMonth() {
-  const selectedMonth = document.getElementById('monthFilter').value;
-
-  // Filter the rows based on the selected month
-  const rows = document.querySelectorAll('#salaryTable tbody tr');
-  rows.forEach(row => {
-    const monthCell = row.children[6].innerText;
-    if (selectedMonth && monthCell !== selectedMonth) {
-      row.style.display = 'none';
-    } else {
-      row.style.display = '';
-    }
-  });
-}
-
-function updateTotalSalary() {
+  function updateTotalSalary() {
   const selectedMonth = document.getElementById('monthFilter').value;
   const rows = document.querySelectorAll('#salaryTable tbody tr');
   let totalSalary = 0;
@@ -331,6 +315,21 @@ function updateTotalSalary() {
   });
 
   document.getElementById('totalSalaryValue').innerText = totalSalary;
+}
+
+function filterByMonth() {
+  const selectedMonth = document.getElementById('monthFilter').value;
+
+  // Filter the rows based on the selected month
+  const rows = document.querySelectorAll('#salaryTable tbody tr');
+  rows.forEach(row => {
+    const monthCell = row.children[6].innerText;
+    if (selectedMonth && monthCell !== selectedMonth) {
+      row.style.display = 'none';
+    } else {
+      row.style.display = '';
+    }
+  });
 }
 
 // Load existing salary records when page loads
