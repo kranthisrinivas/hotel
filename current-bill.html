@@ -3,25 +3,99 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Employee Salary Management</title>
-  <link rel="stylesheet" href="styles.css">
+  <title>Current Bill Management</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f9fafb;
+      margin: 0;
+      padding: 0;
+      color: #1f2937;
+    }
+    .container {
+      max-width: 800px;
+      margin: 50px auto;
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    form {
+      display: grid;
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+    input, select, button {
+      padding: 10px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 16px;
+    }
+    button {
+      background-color: #4f46e5;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #4338ca;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background-color: white;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    }
+    th, td {
+      padding: 10px 12px;
+      border-bottom: 1px solid #ddd;
+      text-align: left;
+    }
+    th {
+      background-color: #f3f4f6;
+    }
+    .action-btn {
+      padding: 5px 10px;
+      margin: 2px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .edit-btn {
+      background-color: #fbbf24;
+      color: black;
+    }
+    .delete-btn {
+      background-color: #ef4444;
+      color: white;
+    }
+  </style>
 </head>
 <body>
 
 <nav style="background-color: #4f46e5; padding: 15px; text-align: center;">
-  <a href="index.html" style="color: white; margin: 0 15px;">Home</a>
-  <a href="stock.html" style="color: white; margin: 0 15px;">Stock</a>
-  <a href="salary.html" style="color: white; margin: 0 15px;">Salary</a>
+  <a href="index.html" style="color: white; text-decoration: none; margin: 0 15px; font-weight: bold;">Home</a>
+  <a href="stock.html" style="color: white; text-decoration: none; margin: 0 15px; font-weight: bold;">Stock</a>
+  <a href="salary.html" style="color: white; text-decoration: none; margin: 0 15px; font-weight: bold;">Salary</a>
 </nav>
 
 <div class="container">
-  <h1>Employee Salary Form</h1>
+  <h1>Current Bill Form</h1>
 
-  <div id="totalSalary"><strong>Total Salary Paid: </strong><span id="totalSalaryValue">0</span></div>
+  <!-- Total Bill Amount -->
+  <div id="totalBill" style="font-size: 18px; margin-bottom: 20px;">
+    <strong>Total Bill Amount: </strong><span id="totalBillValue">0</span>
+  </div>
 
+  <!-- Filter by Month -->
   <div style="margin-bottom: 20px;">
     <label for="monthFilter">Filter by Month:</label>
-    <select id="monthFilter">
+    <select id="monthFilter" onchange="filterByMonth()">
       <option value="">All</option>
       <option value="January">January</option>
       <option value="February">February</option>
@@ -38,15 +112,13 @@
     </select>
   </div>
 
-  <form id="salaryForm">
-    <input type="text" name="employeeName" placeholder="Employee Name" required>
-    <input type="text" name="position" placeholder="Position" required>
-    <input type="number" name="workingHours" placeholder="Working Hours" required>
-    <input type="number" name="leaves" placeholder="Leaves Taken" required>
-    <input type="number" name="advance" placeholder="Advance Paid" required>
-    <input type="number" name="salary" placeholder="Final Salary" required>
-    <select name="paymentMonth" required>
-      <option value="">Select Payment Month</option>
+  <form id="billForm">
+    <input type="text" name="flatNumber" placeholder="Flat Number" required />
+    <input type="text" name="currentBillNumber" placeholder="Current Bill Number" required />
+    <input type="number" name="billAmount" placeholder="Bill Amount" required />
+    <input type="file" name="billUpload" accept="image/*,.pdf" required />
+    <select name="month" required>
+      <option value="">Select Month</option>
       <option value="January">January</option>
       <option value="February">February</option>
       <option value="March">March</option>
@@ -63,203 +135,211 @@
     <button type="submit">Submit</button>
   </form>
 
-  <h2>Submitted Salary Records</h2>
-  <table id="salaryTable">
+  <h2>Submitted Bill Records</h2>
+  <table id="billTable">
     <thead>
       <tr>
-        <th>Employee</th>
-        <th>Position</th>
-        <th>Working Hours</th>
-        <th>Leaves</th>
-        <th>Advance</th>
-        <th>Salary</th>
+        <th>Flat</th>
+        <th>Bill No.</th>
+        <th>Amount</th>
+        <th>Upload</th>
         <th>Month</th>
         <th>Actions</th>
       </tr>
     </thead>
-    <tbody></tbody>
+    <tbody>
+      <!-- Bill records appear here -->
+    </tbody>
   </table>
-
 </div>
 
 <script>
-  // Airtable details
-const airtableApiKey = 'YOUR_API_KEY';
-const airtableBaseId = 'YOUR_BASE_ID';
-const airtableTableName = 'EmployeeSalaries';
+// Airtable setup
+const airtableApiKey = 'YOUR_API_KEY_HERE'; // 🔥 Replace
+const airtableBaseId = 'YOUR_BASE_ID_HERE'; // 🔥 Replace
+const airtableTableName = 'CurrentBills'; // 🔥 Your table name
 
 let editRecordId = null;
 
-const salaryForm = document.getElementById('salaryForm');
-const salaryTableBody = document.querySelector('#salaryTable tbody');
-const monthFilter = document.getElementById('monthFilter');
-
-// Form Submit
-salaryForm.addEventListener('submit', function(event) {
+document.getElementById('billForm').addEventListener('submit', async function(event) {
   event.preventDefault();
-  const formData = new FormData(salaryForm);
-  const data = Object.fromEntries(formData.entries());
+  const formData = new FormData(event.target);
+
+  const file = formData.get('billUpload');
+  const flatNumber = formData.get('flatNumber');
+  const currentBillNumber = formData.get('currentBillNumber');
+  const billAmount = formData.get('billAmount');
+  const month = formData.get('month');
+
+  let attachmentUrl = '';
+
+  if (file) {
+    const uploadResponse = await uploadFileToAirtable(file);
+    if (uploadResponse) {
+      attachmentUrl = uploadResponse.url;
+    }
+  }
+
+  const data = {
+    FlatNumber: flatNumber,
+    CurrentBillNumber: currentBillNumber,
+    BillAmount: parseInt(billAmount),
+    BillUpload: attachmentUrl ? [{ url: attachmentUrl }] : [],
+    Month: month
+  };
 
   if (editRecordId === null) {
-    addRecord(data);
+    addRecordToAirtable(data);
   } else {
-    updateRecord(data);
+    updateRecordInAirtable(data);
   }
-  salaryForm.reset();
+
+  event.target.reset();
 });
 
-// Add Record
-function addRecord(data) {
+async function uploadFileToAirtable(file) {
+  const uploadEndpoint = `https://file.io`;
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const response = await fetch(uploadEndpoint, { method: 'POST', body: formData });
+  const data = await response.json();
+  return data.success ? { url: data.link } : null;
+}
+
+function addRecordToAirtable(data) {
   fetch(`https://api.airtable.com/v0/${airtableBaseId}/${airtableTableName}`, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${airtableApiKey}`,
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify({ fields: formatFields(data) })
+    body: JSON.stringify({ fields: data })
   })
-  .then(res => res.json())
-  .then(record => displayRecord(record))
-  .catch(err => console.error('Add Error:', err));
+  .then(response => response.json())
+  .then(record => {
+    displayRecord(record);
+  })
+  .catch(error => console.error('Error adding record:', error));
 }
 
-// Display Record
 function displayRecord(record) {
+  const tableBody = document.querySelector('#billTable tbody');
   const row = document.createElement('tr');
-  row.dataset.id = record.id;
+  row.setAttribute('data-id', record.id);
+
+  const billLink = record.fields.BillUpload && record.fields.BillUpload.length > 0
+    ? `<a href="${record.fields.BillUpload[0].url}" target="_blank">View Bill</a>`
+    : 'No File';
+
   row.innerHTML = `
-    <td>${record.fields.EmployeeName}</td>
-    <td>${record.fields.Position}</td>
-    <td>${record.fields.WorkingHours}</td>
-    <td>${record.fields.Leaves}</td>
-    <td>${record.fields.Advance}</td>
-    <td>${record.fields.Salary}</td>
-    <td>${record.fields.PaymentMonth}</td>
+    <td>${record.fields.FlatNumber}</td>
+    <td>${record.fields.CurrentBillNumber}</td>
+    <td>${record.fields.BillAmount}</td>
+    <td>${billLink}</td>
+    <td>${record.fields.Month}</td>
     <td>
-      <button onclick="editRow('${record.id}', this)">Edit</button>
-      <button onclick="deleteRow('${record.id}', this)">Delete</button>
+      <button class="action-btn edit-btn" onclick="editRow('${record.id}', this)">Edit</button>
+      <button class="action-btn delete-btn" onclick="deleteRow('${record.id}', this)">Delete</button>
     </td>
   `;
-  salaryTableBody.appendChild(row);
-  updateTotalSalary();
+  tableBody.appendChild(row);
+  updateTotalBill();
 }
 
-// Format fields
-function formatFields(data) {
-  return {
-    EmployeeName: data.employeeName,
-    Position: data.position,
-    WorkingHours: parseInt(data.workingHours),
-    Leaves: parseInt(data.leaves),
-    Advance: parseInt(data.advance),
-    Salary: parseInt(data.salary),
-    PaymentMonth: data.paymentMonth
-  };
+function editRow(recordId, button) {
+  const row = button.parentElement.parentElement;
+  const cells = row.querySelectorAll('td');
+
+  document.querySelector('input[name="flatNumber"]').value = cells[0].innerText;
+  document.querySelector('input[name="currentBillNumber"]').value = cells[1].innerText;
+  document.querySelector('input[name="billAmount"]').value = cells[2].innerText;
+  document.querySelector('select[name="month"]').value = cells[4].innerText;
+
+  editRecordId = recordId;
 }
 
-// Edit Row
-function editRow(id, btn) {
-  const row = btn.closest('tr').children;
-  salaryForm.employeeName.value = row[0].innerText;
-  salaryForm.position.value = row[1].innerText;
-  salaryForm.workingHours.value = row[2].innerText;
-  salaryForm.leaves.value = row[3].innerText;
-  salaryForm.advance.value = row[4].innerText;
-  salaryForm.salary.value = row[5].innerText;
-  salaryForm.paymentMonth.value = row[6].innerText;
-
-  editRecordId = id;
-}
-
-// Update Record
-function updateRecord(data) {
+function updateRecordInAirtable(data) {
   fetch(`https://api.airtable.com/v0/${airtableBaseId}/${airtableTableName}/${editRecordId}`, {
     method: 'PATCH',
     headers: {
       'Authorization': `Bearer ${airtableApiKey}`,
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify({ fields: formatFields(data) })
+    body: JSON.stringify({ fields: data })
   })
-  .then(res => res.json())
-  .then(record => {
-    const row = document.querySelector(`tr[data-id="${editRecordId}"]`).children;
-    row[0].innerText = record.fields.EmployeeName;
-    row[1].innerText = record.fields.Position;
-    row[2].innerText = record.fields.WorkingHours;
-    row[3].innerText = record.fields.Leaves;
-    row[4].innerText = record.fields.Advance;
-    row[5].innerText = record.fields.Salary;
-    row[6].innerText = record.fields.PaymentMonth;
+  .then(response => response.json())
+  .then(updatedRecord => {
+    const rows = document.querySelectorAll('#billTable tbody tr');
+    rows.forEach(row => {
+      if (row.getAttribute('data-id') === editRecordId) {
+        row.children[0].innerText = updatedRecord.fields.FlatNumber;
+        row.children[1].innerText = updatedRecord.fields.CurrentBillNumber;
+        row.children[2].innerText = updatedRecord.fields.BillAmount;
+        row.children[4].innerText = updatedRecord.fields.Month;
+      }
+    });
+
     editRecordId = null;
-    updateTotalSalary();
+    updateTotalBill();
   })
-  .catch(err => console.error('Update Error:', err));
+  .catch(error => console.error('Error updating record:', error));
 }
 
-// Delete Row
-function deleteRow(id, btn) {
-  if (confirm('Are you sure you want to delete?')) {
-    fetch(`https://api.airtable.com/v0/${airtableBaseId}/${airtableTableName}/${id}`, {
+function deleteRow(recordId, button) {
+  if (confirm('Are you sure you want to delete this record?')) {
+    fetch(`https://api.airtable.com/v0/${airtableBaseId}/${airtableTableName}/${recordId}`, {
       method: 'DELETE',
-      headers: { 'Authorization': `Bearer ${airtableApiKey}` }
+      headers: {
+        'Authorization': `Bearer ${airtableApiKey}`
+      }
     })
     .then(() => {
-      btn.closest('tr').remove();
-      updateTotalSalary();
+      button.parentElement.parentElement.remove();
+      updateTotalBill();
     })
-    .catch(err => console.error('Delete Error:', err));
+    .catch(error => console.error('Error deleting record:', error));
   }
 }
 
-// Filter by Month
-monthFilter.addEventListener('change', filterByMonth);
+function updateTotalBill() {
+  const selectedMonth = document.getElementById('monthFilter').value;
+  const rows = document.querySelectorAll('#billTable tbody tr');
+  let total = 0;
+  rows.forEach(row => {
+    const monthCell = row.children[4].innerText;
+    if (!selectedMonth || monthCell === selectedMonth) {
+      total += parseInt(row.children[2].innerText) || 0;
+    }
+  });
+  document.getElementById('totalBillValue').innerText = total;
+}
 
 function filterByMonth() {
-  const selectedMonth = monthFilter.value;
-  const rows = salaryTableBody.querySelectorAll('tr');
-
+  const selectedMonth = document.getElementById('monthFilter').value;
+  const rows = document.querySelectorAll('#billTable tbody tr');
   rows.forEach(row => {
-    const month = row.children[6].innerText;
-    if (!selectedMonth || month === selectedMonth) {
-      row.style.display = '';
-    } else {
+    const monthCell = row.children[4].innerText;
+    if (selectedMonth && monthCell !== selectedMonth) {
       row.style.display = 'none';
+    } else {
+      row.style.display = '';
     }
   });
-  updateTotalSalary();
 }
 
-// Update Total Salary
-function updateTotalSalary() {
-  const selectedMonth = monthFilter.value;
-  const rows = salaryTableBody.querySelectorAll('tr');
-  let total = 0;
-
-  rows.forEach(row => {
-    const salary = parseInt(row.children[5].innerText) || 0;
-    const month = row.children[6].innerText;
-
-    if (!selectedMonth || month === selectedMonth) {
-      total += salary;
-    }
-  });
-
-  document.getElementById('totalSalaryValue').innerText = total;
-}
-
-// Load existing records
 window.onload = function() {
   fetch(`https://api.airtable.com/v0/${airtableBaseId}/${airtableTableName}`, {
-    headers: { 'Authorization': `Bearer ${airtableApiKey}` }
+    headers: {
+      'Authorization': `Bearer ${airtableApiKey}`
+    }
   })
-  .then(res => res.json())
+  .then(response => response.json())
   .then(data => {
     data.records.forEach(record => displayRecord(record));
   })
-  .catch(err => console.error('Load Error:', err));
-}
-
+  .catch(error => console.error('Error loading records:', error));
+};
 </script>
 
 </body>
