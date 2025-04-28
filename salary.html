@@ -317,10 +317,17 @@ function filterByMonth() {
 }
 
 function updateTotalSalary() {
+  const selectedMonth = document.getElementById('monthFilter').value;
   const rows = document.querySelectorAll('#salaryTable tbody tr');
   let totalSalary = 0;
+
   rows.forEach(row => {
-    totalSalary += parseInt(row.children[5].innerText) || 0;
+    const monthCell = row.children[6].innerText;
+
+    // Only add salary if it matches the selected month
+    if (!selectedMonth || monthCell === selectedMonth) {
+      totalSalary += parseInt(row.children[5].innerText) || 0;
+    }
   });
 
   document.getElementById('totalSalaryValue').innerText = totalSalary;
