@@ -6,6 +6,8 @@
       window.location.href = "login.html";
     }
   </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>PG Hostel Admin</title>
@@ -138,6 +140,22 @@
   
   <div class="container">
     <h1>PG Hostel Admin Panel</h1>
+    <button onclick="exportDashboardPDF()">Export Summary PDF</button>
+    <div id="pdfContent">
+  <h2>Monthly Summary</h2>
+  <p>Total Revenue: ₹<span id="totalRevenue">0</span></p>
+
+  <h3>Expenses</h3>
+  <ul>
+    <li>Vegetables: ₹<span id="vegetableAmount">0</span></li>
+    <li>Groceries: ₹<span id="groceryAmount">0</span></li>
+    <li>Gas: ₹<span id="gasAmount">0</span></li>
+    <li>Salary: ₹<span id="salaryAmount">0</span></li>
+    <li>Flat Rents: ₹<span id="rentAmount">0</span></li>
+    <li>Current Bill: ₹<span id="billAmount">0</span></li>
+  </ul>
+</div>
+
 
     <div class="stats">
       <div class="stat-box">
