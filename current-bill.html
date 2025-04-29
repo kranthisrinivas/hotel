@@ -155,9 +155,14 @@
 
 <script>
 // Airtable setup
+// Airtable setup
 const airtableApiKey = 'YOUR_API_KEY_HERE'; // 🔥 Replace
 const airtableBaseId = 'YOUR_BASE_ID_HERE'; // 🔥 Replace
-const airtableTableName = 'CurrentBills'; // 🔥 Your table name
+const airtableTableName = 'CurrentBills'; // 🔥 Your Airtable table
+
+// Cloudinary setup
+const cloudinaryUploadUrl = 'https://api.cloudinary.com/v1_1/YOUR_CLOUD_NAME/upload'; // 🔥 Replace YOUR_CLOUD_NAME
+const cloudinaryUploadPreset = 'YOUR_UPLOAD_PRESET'; // 🔥 Replace your unsigned upload preset
 
 let editRecordId = null;
 
@@ -174,9 +179,9 @@ document.getElementById('billForm').addEventListener('submit', async function(ev
   let attachmentUrl = '';
 
   if (file) {
-    const uploadResponse = await uploadFileToAirtable(file);
+    const uploadResponse = await uploadFileToCloudinary(file);
     if (uploadResponse) {
-      attachmentUrl = uploadResponse.url;
+      attachmentUrl = uploadResponse.secure_url;
     }
   }
 
@@ -197,15 +202,30 @@ document.getElementById('billForm').addEventListener('submit', async function(ev
   event.target.reset();
 });
 
-async function uploadFileToAirtable(file) {
-  const uploadEndpoint = `https://file.io`;
+// 🚀 Updated Function: Upload to Cloudinary
+async function uploadFileToCloudinary(file) {
   const formData = new FormData();
   formData.append('file', file);
+  formData.append('upload_preset', cloudinaryUploadPreset);
 
-  const response = await fetch(uploadEndpoint, { method: 'POST', body: formData });
-  const data = await response.json();
-  return data.success ? { url: data.link } : null;
+  try {
+    const response = await fetch(cloudinaryUploadUrl, {
+      method: 'POST',
+      body: formData
+    });
+
+    if (!response.ok) throw new Error('Upload failed');
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error uploading to Cloudinary:', error);
+    return null;
+  }
 }
+
+// --- Rest of your existing code (addRecordToAirtable, updateRecordInAirtable, displayRecord, editRow, deleteRow, etc.) remains SAME ---
+
 
 function addRecordToAirtable(data) {
   fetch(`https://api.airtable.com/v0/${airtableBaseId}/${airtableTableName}`, {
