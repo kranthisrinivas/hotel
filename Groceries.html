@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Groceries Management</title>
+  <style>
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f9fafb; margin: 0; padding: 0; color: #1f2937; }
+    .container { max-width: 800px; margin: 50px auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+    h1 { text-align: center; margin-bottom: 20px; }
+    form { display: grid; gap: 15px; margin-bottom: 30px; }
+    input, select, button { padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 16px; }
+    button { background-color: #4f46e5; color: white; font-weight: bold; cursor: pointer; }
+    button:hover { background-color: #4338ca; }
+    table { width: 100%; border-collapse: collapse; background-color: white; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+    th, td { padding: 10px 12px; border-bottom: 1px solid #ddd; text-align: left; }
+    th { background-color: #f3f4f6; }
+    img { width: 60px; height: auto; border-radius: 8px; }
+    .action-btn { padding: 5px 10px; margin: 2px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }
+    .edit-btn { background-color: #fbbf24; color: black; }
+    .delete-btn { background-color: #ef4444; color: white; }
+  </style>
+</head>
+<body>
+
+<nav style="background-color: #4f46e5; padding: 15px; text-align: center;">
+  <a href="index.html" style="color: white; text-decoration: none; margin: 0 15px; font-weight: bold;">Home</a>
+  <a href="stock.html" style="color: white; text-decoration: none; margin: 0 15px; font-weight: bold;">Stock</a>
+  <a href="groceries.html" style="color: white; text-decoration: none; margin: 0 15px; font-weight: bold;">Groceries</a>
+</nav>
+
+<div class="container">
+  <h1>Groceries Management</h1>
+
+  <div style="margin-bottom: 20px;">
+    <label for="monthFilter"><strong>Filter by Month:</strong></label>
+    <input type="month" id="monthFilter" />
+    <button onclick="filterByMonth()">Apply</button>
+  </div>
+
+  <div style="margin-bottom: 20px;">
+    <strong>Total Amount Paid:</strong> ₹<span id="totalAmount">0</span>
+  </div>
+
+  <form id="groceriesForm">
+    <input type="text" name="groceryName" placeholder="Grocery Name" required />
+    <input type="number" name="amountPaid" placeholder="Amount Paid (₹)" required />
+    <input type="file" name="imageFile" accept="image/*" required />
+    <input type="date" name="date" required />
+    <button type="submit">Add Grocery</button>
+  </form>
+
+  <h2>Groceries Records</h2>
+  <table id="groceriesTable">
+    <thead>
+      <tr>
+        <th>Grocery Name</th>
+        <th>Amount Paid</th>
+        <th>Date</th>
+        <th>Image</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Groceries records will appear here -->
+    </tbody>
+  </table>
+
+</div>
+
+<script>
+// Airtable Configuration
+const airtableApiKey = 'pats8mChKxT6dqc6H.1d4848ffddd79d2fb4ba31ae4f7156865740ee839d0954d9bae73992aa9986c9';
+const airtableBaseId = 'appg2RAovHyYmFvIE';
+const airtableTableName = 'Groceries';  // 👈 Create a separate "Groceries" table in Airtable!
+
+let editRecordId = null;
+
+// Form submission
+document.getElementById('groceriesForm').addEventListener('submit', function(event) {
+  event.preventDefault();
+  const formData = new FormData(event.target);
+  const data = Object.fromEntries(formData.entries());
+
+  if (editRecordId === null) {
+    addItemToAirtable(data);
+  } else {
+    updateItemInAirtable(data);
+  }
+
+  event.target.reset();
+});
+
+function addItemToAirtable(data) {
+  const imageFile = document.querySelector('input[name="imageFile"]').files[0];
+  if (!imageFile) return alert("Please select an image file.");
+
+  const cloudName = 'dudx9anuk';
+  const uploadPreset = 'pg-hostel-idproof';
+
+  const formData = new FormData();
+  formData.append("file", imageFile);
+  formData.append("upload_preset", uploadPreset);
+
+  fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+    method: "POST",
+    body: formData
+  })
+  .then(res => res.json())
+  .then(cloudinaryData => {
+    const imageUrl = cloudinaryData.secure_url;
+
+    fetch(`https://api.airtable.com/v0/${airtableBaseId}/${airtableTableName}`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${airtableApiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        fields: {
+          GroceryName: data.groceryName,
+          AmountPaid: parseFloat(data.amountPaid),
+          Date: data.date,
+          Image: [{ url: imageUrl }]
+        }
+      })
+    })
+    .then(response => response.json())
+    .then(record => displayRecord(record))
+    .catch(err => console.error('Error adding to Airtable:', err));
+  })
+  .catch(err => {
+    console.error('Cloudinary upload failed:', err);
+    alert("Image upload failed. Please try again.");
+  });
+}
+
+function displayRecord(record) {
+  const tableBody = document.querySelector('#groceriesTable tbody');
+  const row = document.createElement('tr');
+  row.setAttribute('data-id', record.id);
+
+  const imageCell = record.fields.Image && record.fields.Image[0]
+    ? `<img src="${record.fields.Image[0].url}" alt="Grocery">`
+    : 'No Image';
+
+  row.innerHTML = `
+    <td>${record.fields.GroceryName}</td>
+    <td>${record.fields.AmountPaid}</td>
+    <td>${record.fields.Date}</td>
+    <td>${imageCell}</td>
+    <td>
+      <button class="action-btn edit-btn" onclick="editRow('${record.id}', this)">Edit</button>
+      <button class="action-btn delete-btn" onclick="deleteRow('${record.id}', this)">Delete</button>
+    </td>
+  `;
+
+  tableBody.appendChild(row);
+}
+
+function filterByMonth() {
+  const selectedMonth = document.getElementById('monthFilter').value;
+  if (!selectedMonth) return;
+
+  const rows = document.querySelectorAll('#groceriesTable tbody tr');
+  let total = 0;
+
+  rows.forEach(row => {
+    const dateText = row.children[2].innerText;
+    const rowMonth = dateText.slice(0, 7);
+
+    if (rowMonth === selectedMonth) {
+      row.style.display = '';
+      const amount = parseFloat(row.children[1].innerText);
+      total += amount;
+    } else {
+      row.style.display = 'none';
+    }
+  });
+
+  document.getElementById('totalAmount').textContent = total.toFixed(2);
+}
+
+function editRow(recordId, button) {
+  const row = button.parentElement.parentElement;
+  const cells = row.querySelectorAll('td');
+
+  document.querySelector('input[name="groceryName"]').value = cells[0].innerText;
+  document.querySelector('input[name="amountPaid"]').value = cells[1].innerText;
+  document.querySelector('input[name="date"]').value = cells[2].innerText;
+  editRecordId = recordId;
+}
+
+function updateItemInAirtable(data) {
+  fetch(`https://api.airtable.com/v0/${airtableBaseId}/${airtableTableName}/${editRecordId}`, {
+    method: 'PATCH',
+    headers: {
+      'Authorization': `Bearer ${airtableApiKey}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      fields: {
+        GroceryName: data.groceryName,
+        AmountPaid: parseFloat(data.amountPaid),
+        Date: data.date
+      }
+    })
+  })
+  .then(response => response.json())
+  .then(updatedRecord => {
+    const rows = document.querySelectorAll('#groceriesTable tbody tr');
+    rows.forEach(row => {
+      if (row.getAttribute('data-id') === editRecordId) {
+        row.children[0].innerText = updatedRecord.fields.GroceryName;
+        row.children[1].innerText = updatedRecord.fields.AmountPaid;
+        row.children[2].innerText = updatedRecord.fields.Date;
+      }
+    });
+
+    editRecordId = null;
+  })
+  .catch(error => {
+    console.error('Error updating record:', error);
+  });
+}
+
+function deleteRow(recordId, button) {
+  if (confirm('Are you sure you want to delete this record?')) {
+    fetch(`https://api.airtable.com/v0/${airtableBaseId}/${airtableTableName}/${recordId}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${airtableApiKey}`
+      }
+    })
+    .then(() => {
+      button.parentElement.parentElement.remove();
+    })
+    .catch(error => {
+      console.error('Error deleting record:', error);
+    });
+  }
+}
+
+window.onload = function() {
+  fetch(`https://api.airtable.com/v0/${airtableBaseId}/${airtableTableName}`, {
+    headers: {
+      'Authorization': `Bearer ${airtableApiKey}`
+    }
+  })
+  .then(response => response.json())
+  .then(data => {
+    data.records.forEach(record => {
+      displayRecord(record);
+    });
+  })
+  .catch(error => {
+    console.error('Error loading records:', error);
+  });
+};
+</script>
+
+</body>
+</html>
