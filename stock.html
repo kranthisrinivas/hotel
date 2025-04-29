@@ -82,31 +82,48 @@ document.getElementById('stockForm').addEventListener('submit', function(event) 
 });
 
 function addItemToAirtable(data) {
-  fetch(`https://api.airtable.com/v0/${airtableBaseId}/${airtableTableName}`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${airtableApiKey}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      fields: {
-        VegetableName: data.vegetableName,
-        AmountPaid: parseFloat(data.amountPaid),
-        Date: data.date,
-        Image: [
-          {
-            url: data.imageUrl
-          }
-        ]
-      }
+  const imageFile = document.querySelector('input[name="imageFile"]').files[0];
+  if (!imageFile) return alert("Please select an image file.");
+
+  const cloudName = 'dudx9anuk'; // 🔁 Replace this
+  const uploadPreset = 'pg-hostel-idproof'; // 🔁 Replace this
+
+  const formData = new FormData();
+  formData.append("file", imageFile);
+  formData.append("upload_preset", uploadPreset);
+
+  // Step 1: Upload image to Cloudinary
+  fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+    method: "POST",
+    body: formData
+  })
+  .then(res => res.json())
+  .then(cloudinaryData => {
+    const imageUrl = cloudinaryData.secure_url;
+
+    // Step 2: Add to Airtable with image URL
+    fetch(`https://api.airtable.com/v0/${airtableBaseId}/${airtableTableName}`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${airtableApiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        fields: {
+          VegetableName: data.vegetableName,
+          AmountPaid: parseFloat(data.amountPaid),
+          Date: data.date,
+          Image: [{ url: imageUrl }]
+        }
+      })
     })
+    .then(response => response.json())
+    .then(record => displayRecord(record))
+    .catch(err => console.error('Error adding to Airtable:', err));
   })
-  .then(response => response.json())
-  .then(record => {
-    displayRecord(record);
-  })
-  .catch(error => {
-    console.error('Error adding record:', error);
+  .catch(err => {
+    console.error('Cloudinary upload failed:', err);
+    alert("Image upload failed. Please try again.");
   });
 }
 
