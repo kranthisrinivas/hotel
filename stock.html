@@ -31,6 +31,15 @@
 
 <div class="container">
   <h1>Vegetable Stock Management</h1>
+  <div style="margin-bottom: 20px;">
+  <label for="monthFilter"><strong>Filter by Month:</strong></label>
+  <input type="month" id="monthFilter" />
+  <button onclick="filterByMonth()">Apply</button>
+</div>
+<div style="margin-bottom: 20px;">
+  <strong>Total Amount Paid:</strong> ₹<span id="totalAmount">0</span>
+</div>
+
 
   <form id="stockForm">
     <input type="text" name="vegetableName" placeholder="Vegetable Name" required />
@@ -148,6 +157,28 @@ function displayRecord(record) {
   `;
 
   tableBody.appendChild(row);
+}
+function filterByMonth() {
+  const selectedMonth = document.getElementById('monthFilter').value; // format: "2025-04"
+  if (!selectedMonth) return;
+
+  const rows = document.querySelectorAll('#stockTable tbody tr');
+  let total = 0;
+
+  rows.forEach(row => {
+    const dateText = row.children[2].innerText; // Date cell
+    const rowMonth = dateText.slice(0, 7); // Extract "YYYY-MM"
+
+    if (rowMonth === selectedMonth) {
+      row.style.display = ''; // Show
+      const amount = parseFloat(row.children[1].innerText); // Amount cell
+      total += amount;
+    } else {
+      row.style.display = 'none'; // Hide
+    }
+  });
+
+  document.getElementById('totalAmount').textContent = total.toFixed(2);
 }
 
 function editRow(recordId, button) {
