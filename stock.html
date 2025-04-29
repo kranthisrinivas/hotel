@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Stock Management</title>
+  <title>Stock Management - Vegetables</title>
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -58,6 +58,11 @@
     th {
       background-color: #f3f4f6;
     }
+    img {
+      width: 60px;
+      height: auto;
+      border-radius: 8px;
+    }
     .action-btn {
       padding: 5px 10px;
       margin: 2px;
@@ -77,58 +82,33 @@
   </style>
 </head>
 <body>
-  <!-- Navigation Menu -->
+
+<!-- Navigation -->
 <nav style="background-color: #4f46e5; padding: 15px; text-align: center;">
   <a href="index.html" style="color: white; text-decoration: none; margin: 0 15px; font-weight: bold;">Home</a>
   <a href="stock.html" style="color: white; text-decoration: none; margin: 0 15px; font-weight: bold;">Stock</a>
   <a href="salary.html" style="color: white; text-decoration: none; margin: 0 15px; font-weight: bold;">Salary</a>
 </nav>
 
-
 <div class="container">
-  <h1>Stock Management</h1>
-  <div style="margin-bottom: 20px;">
-    <label for="monthFilter">Filter by Month:</label>
-    <select id="monthFilter" onchange="filterByMonth()">
-      <option value="">All</option>
-      <option value="January">January</option>
-      <option value="February">February</option>
-      <option value="March">March</option>
-      <option value="April">April</option>
-      <option value="May">May</option>
-      <option value="June">June</option>
-      <option value="July">July</option>
-      <option value="August">August</option>
-      <option value="September">September</option>
-      <option value="October">October</option>
-      <option value="November">November</option>
-      <option value="December">December</option>
-    </select>
-  </div>
-
-  <div id="totalStockValue" style="font-size: 18px; margin-bottom: 20px;">
-    <strong>Total Stock Value: </strong><span id="totalStockValueAmount">0</span>
-  </div>
+  <h1>Vegetable Stock Management</h1>
 
   <form id="stockForm">
-    <input type="text" name="itemName" placeholder="Item Name" required />
-    <input type="number" name="quantity" placeholder="Quantity" required />
-    <input type="number" name="pricePerUnit" placeholder="Price per Unit" required />
+    <input type="text" name="vegetableName" placeholder="Vegetable Name" required />
+    <input type="number" name="amountPaid" placeholder="Amount Paid (₹)" required />
+    <input type="file" name="image" accept="image/*" required />
     <input type="date" name="date" required />
-    <input type="text" name="category" placeholder="Category (Optional)" />
-    <input type="text" name="supplier" placeholder="Supplier Name (Optional)" />
-    <button type="submit">Add Item</button>
+    <button type="submit">Add Stock</button>
   </form>
 
   <h2>Stock Records</h2>
   <table id="stockTable">
     <thead>
       <tr>
-        <th>Item Name</th>
-        <th>Quantity</th>
-        <th>Price per Unit</th>
+        <th>Vegetable Name</th>
+        <th>Amount Paid</th>
         <th>Date</th>
-        <th>Total Value</th>
+        <th>Image</th>
         <th>Actions</th>
       </tr>
     </thead>
@@ -140,12 +120,14 @@
 </div>
 
 <script>
+// Airtable Configuration
 const airtableApiKey = 'patouRXzFiWml71N2.65cfe61023e7783bae95fb254ea2e1792197e2b8343d88c3a7d5cff4f576478a';
 const airtableBaseId = 'app3OT5FqpAFCHWdE';
 const airtableTableName = 'Stock';
 
 let editRecordId = null;
 
+// Form submission
 document.getElementById('stockForm').addEventListener('submit', function(event) {
   event.preventDefault();
   const formData = new FormData(event.target);
@@ -161,31 +143,43 @@ document.getElementById('stockForm').addEventListener('submit', function(event) 
 });
 
 function addItemToAirtable(data) {
-  fetch(`https://api.airtable.com/v0/${airtableBaseId}/${airtableTableName}`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${airtableApiKey}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      fields: {
-        ItemName: data.itemName,
-        Quantity: parseInt(data.quantity),
-        PricePerUnit: parseFloat(data.pricePerUnit),
-        Category: data.category || '',
-        Supplier: data.supplier || '',
-        Date: data.date
-      }
+  const imageFile = document.querySelector('input[name="image"]').files[0];
+
+  if (!imageFile) {
+    alert("Please upload an image.");
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = function () {
+    fetch(`https://api.airtable.com/v0/${airtableBaseId}/${airtableTableName}`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${airtableApiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        fields: {
+          VegetableName: data.vegetableName,
+          AmountPaid: parseFloat(data.amountPaid),
+          Date: data.date,
+          Image: [
+            {
+              url: reader.result
+            }
+          ]
+        }
+      })
     })
-  })
-  .then(response => response.json())
-  .then(record => {
-    displayRecord(record);
-    updateTotalStockValue();
-  })
-  .catch(error => {
-    console.error('Error adding record:', error);
-  });
+    .then(response => response.json())
+    .then(record => {
+      displayRecord(record);
+    })
+    .catch(error => {
+      console.error('Error adding record:', error);
+    });
+  };
+  reader.readAsDataURL(imageFile);
 }
 
 function displayRecord(record) {
@@ -193,14 +187,15 @@ function displayRecord(record) {
   const row = document.createElement('tr');
   row.setAttribute('data-id', record.id);
 
-  const totalValue = record.fields.Quantity * record.fields.PricePerUnit;
+  const imageCell = record.fields.Image && record.fields.Image[0]
+    ? `<img src="${record.fields.Image[0].url}" alt="Vegetable">`
+    : 'No Image';
 
   row.innerHTML = `
-    <td>${record.fields.ItemName}</td>
-    <td>${record.fields.Quantity}</td>
-    <td>${record.fields.PricePerUnit}</td>
+    <td>${record.fields.VegetableName}</td>
+    <td>${record.fields.AmountPaid}</td>
     <td>${record.fields.Date}</td>
-    <td>${totalValue}</td>
+    <td>${imageCell}</td>
     <td>
       <button class="action-btn edit-btn" onclick="editRow('${record.id}', this)">Edit</button>
       <button class="action-btn delete-btn" onclick="deleteRow('${record.id}', this)">Delete</button>
@@ -214,11 +209,9 @@ function editRow(recordId, button) {
   const row = button.parentElement.parentElement;
   const cells = row.querySelectorAll('td');
 
-  document.querySelector('input[name="itemName"]').value = cells[0].innerText;
-  document.querySelector('input[name="quantity"]').value = cells[1].innerText;
-  document.querySelector('input[name="pricePerUnit"]').value = cells[2].innerText;
-  document.querySelector('input[name="date"]').value = cells[3].innerText;
-
+  document.querySelector('input[name="vegetableName"]').value = cells[0].innerText;
+  document.querySelector('input[name="amountPaid"]').value = cells[1].innerText;
+  document.querySelector('input[name="date"]').value = cells[2].innerText;
   editRecordId = recordId;
 }
 
@@ -231,12 +224,9 @@ function updateItemInAirtable(data) {
     },
     body: JSON.stringify({
       fields: {
-        ItemName: data.itemName,
-        Quantity: parseInt(data.quantity),
-        PricePerUnit: parseFloat(data.pricePerUnit),
-        Date: data.date,
-        Category: data.category || '',
-        Supplier: data.supplier || ''
+        VegetableName: data.vegetableName,
+        AmountPaid: parseFloat(data.amountPaid),
+        Date: data.date
       }
     })
   })
@@ -245,37 +235,16 @@ function updateItemInAirtable(data) {
     const rows = document.querySelectorAll('#stockTable tbody tr');
     rows.forEach(row => {
       if (row.getAttribute('data-id') === editRecordId) {
-        const totalValue = updatedRecord.fields.Quantity * updatedRecord.fields.PricePerUnit;
-        row.children[0].innerText = updatedRecord.fields.ItemName;
-        row.children[1].innerText = updatedRecord.fields.Quantity;
-        row.children[2].innerText = updatedRecord.fields.PricePerUnit;
-        row.children[3].innerText = updatedRecord.fields.Date;
-        row.children[4].innerText = totalValue;
+        row.children[0].innerText = updatedRecord.fields.VegetableName;
+        row.children[1].innerText = updatedRecord.fields.AmountPaid;
+        row.children[2].innerText = updatedRecord.fields.Date;
       }
     });
 
     editRecordId = null;
-    updateTotalStockValue();
   })
   .catch(error => {
     console.error('Error updating record:', error);
-  });
-}
-
-function filterByMonth() {
-  const selectedMonth = document.getElementById('monthFilter').value;
-  const rows = document.querySelectorAll('#stockTable tbody tr');
-
-  rows.forEach(row => {
-    const dateText = row.children[3].innerText; // 4th column is Date (index 3)
-    const date = new Date(dateText);
-    const month = date.toLocaleString('default', { month: 'long' });
-
-    if (selectedMonth && month !== selectedMonth) {
-      row.style.display = 'none';
-    } else {
-      row.style.display = '';
-    }
   });
 }
 
@@ -289,22 +258,11 @@ function deleteRow(recordId, button) {
     })
     .then(() => {
       button.parentElement.parentElement.remove();
-      updateTotalStockValue();
     })
     .catch(error => {
       console.error('Error deleting record:', error);
     });
   }
-}
-
-function updateTotalStockValue() {
-  const rows = document.querySelectorAll('#stockTable tbody tr');
-  let totalStockValue = 0;
-  rows.forEach(row => {
-    totalStockValue += parseInt(row.children[4].innerText) || 0;
-  });
-
-  document.getElementById('totalStockValueAmount').innerText = totalStockValue;
 }
 
 window.onload = function() {
@@ -318,7 +276,6 @@ window.onload = function() {
     data.records.forEach(record => {
       displayRecord(record);
     });
-    updateTotalStockValue();
   })
   .catch(error => {
     console.error('Error loading records:', error);
@@ -328,3 +285,4 @@ window.onload = function() {
 
 </body>
 </html>
+
