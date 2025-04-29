@@ -5,85 +5,24 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Stock Management - Vegetables</title>
   <style>
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #f9fafb;
-      margin: 0;
-      padding: 0;
-      color: #1f2937;
-    }
-    .container {
-      max-width: 800px;
-      margin: 50px auto;
-      background: white;
-      padding: 30px;
-      border-radius: 12px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-    }
-    h1 {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-    form {
-      display: grid;
-      gap: 15px;
-      margin-bottom: 30px;
-    }
-    input, select, button {
-      padding: 10px;
-      border: 1px solid #d1d5db;
-      border-radius: 6px;
-      font-size: 16px;
-    }
-    button {
-      background-color: #4f46e5;
-      color: white;
-      font-weight: bold;
-      cursor: pointer;
-    }
-    button:hover {
-      background-color: #4338ca;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background-color: white;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-    }
-    th, td {
-      padding: 10px 12px;
-      border-bottom: 1px solid #ddd;
-      text-align: left;
-    }
-    th {
-      background-color: #f3f4f6;
-    }
-    img {
-      width: 60px;
-      height: auto;
-      border-radius: 8px;
-    }
-    .action-btn {
-      padding: 5px 10px;
-      margin: 2px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 14px;
-    }
-    .edit-btn {
-      background-color: #fbbf24;
-      color: black;
-    }
-    .delete-btn {
-      background-color: #ef4444;
-      color: white;
-    }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f9fafb; margin: 0; padding: 0; color: #1f2937; }
+    .container { max-width: 800px; margin: 50px auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+    h1 { text-align: center; margin-bottom: 20px; }
+    form { display: grid; gap: 15px; margin-bottom: 30px; }
+    input, select, button { padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 16px; }
+    button { background-color: #4f46e5; color: white; font-weight: bold; cursor: pointer; }
+    button:hover { background-color: #4338ca; }
+    table { width: 100%; border-collapse: collapse; background-color: white; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+    th, td { padding: 10px 12px; border-bottom: 1px solid #ddd; text-align: left; }
+    th { background-color: #f3f4f6; }
+    img { width: 60px; height: auto; border-radius: 8px; }
+    .action-btn { padding: 5px 10px; margin: 2px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }
+    .edit-btn { background-color: #fbbf24; color: black; }
+    .delete-btn { background-color: #ef4444; color: white; }
   </style>
 </head>
 <body>
 
-<!-- Navigation -->
 <nav style="background-color: #4f46e5; padding: 15px; text-align: center;">
   <a href="index.html" style="color: white; text-decoration: none; margin: 0 15px; font-weight: bold;">Home</a>
   <a href="stock.html" style="color: white; text-decoration: none; margin: 0 15px; font-weight: bold;">Stock</a>
@@ -96,7 +35,7 @@
   <form id="stockForm">
     <input type="text" name="vegetableName" placeholder="Vegetable Name" required />
     <input type="number" name="amountPaid" placeholder="Amount Paid (₹)" required />
-    <input type="file" name="image" accept="image/*" required />
+    <input type="url" name="imageUrl" placeholder="Image URL (Direct link)" required />
     <input type="date" name="date" required />
     <button type="submit">Add Stock</button>
   </form>
@@ -121,8 +60,8 @@
 
 <script>
 // Airtable Configuration
-const airtableApiKey = 'patouRXzFiWml71N2.65cfe61023e7783bae95fb254ea2e1792197e2b8343d88c3a7d5cff4f576478a';
-const airtableBaseId = 'app3OT5FqpAFCHWdE';
+const airtableApiKey = 'YOUR_API_KEY';
+const airtableBaseId = 'YOUR_BASE_ID';
 const airtableTableName = 'Stock';
 
 let editRecordId = null;
@@ -143,43 +82,32 @@ document.getElementById('stockForm').addEventListener('submit', function(event) 
 });
 
 function addItemToAirtable(data) {
-  const imageFile = document.querySelector('input[name="image"]').files[0];
-
-  if (!imageFile) {
-    alert("Please upload an image.");
-    return;
-  }
-
-  const reader = new FileReader();
-  reader.onload = function () {
-    fetch(`https://api.airtable.com/v0/${airtableBaseId}/${airtableTableName}`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${airtableApiKey}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        fields: {
-          VegetableName: data.vegetableName,
-          AmountPaid: parseFloat(data.amountPaid),
-          Date: data.date,
-          Image: [
-            {
-              url: reader.result
-            }
-          ]
-        }
-      })
+  fetch(`https://api.airtable.com/v0/${airtableBaseId}/${airtableTableName}`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${airtableApiKey}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      fields: {
+        VegetableName: data.vegetableName,
+        AmountPaid: parseFloat(data.amountPaid),
+        Date: data.date,
+        Image: [
+          {
+            url: data.imageUrl
+          }
+        ]
+      }
     })
-    .then(response => response.json())
-    .then(record => {
-      displayRecord(record);
-    })
-    .catch(error => {
-      console.error('Error adding record:', error);
-    });
-  };
-  reader.readAsDataURL(imageFile);
+  })
+  .then(response => response.json())
+  .then(record => {
+    displayRecord(record);
+  })
+  .catch(error => {
+    console.error('Error adding record:', error);
+  });
 }
 
 function displayRecord(record) {
@@ -212,6 +140,8 @@ function editRow(recordId, button) {
   document.querySelector('input[name="vegetableName"]').value = cells[0].innerText;
   document.querySelector('input[name="amountPaid"]').value = cells[1].innerText;
   document.querySelector('input[name="date"]').value = cells[2].innerText;
+  document.querySelector('input[name="imageUrl"]').value = cells[3].querySelector('img')?.src || '';
+
   editRecordId = recordId;
 }
 
@@ -226,7 +156,12 @@ function updateItemInAirtable(data) {
       fields: {
         VegetableName: data.vegetableName,
         AmountPaid: parseFloat(data.amountPaid),
-        Date: data.date
+        Date: data.date,
+        Image: [
+          {
+            url: data.imageUrl
+          }
+        ]
       }
     })
   })
@@ -238,6 +173,9 @@ function updateItemInAirtable(data) {
         row.children[0].innerText = updatedRecord.fields.VegetableName;
         row.children[1].innerText = updatedRecord.fields.AmountPaid;
         row.children[2].innerText = updatedRecord.fields.Date;
+        if(updatedRecord.fields.Image && updatedRecord.fields.Image[0]) {
+          row.children[3].innerHTML = `<img src="${updatedRecord.fields.Image[0].url}" alt="Vegetable">`;
+        }
       }
     });
 
@@ -285,4 +223,3 @@ window.onload = function() {
 
 </body>
 </html>
-
